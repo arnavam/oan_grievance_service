@@ -11,7 +11,7 @@
   "role",
   "active",
   "col_scope",
-  "region_scope",
+  "administrative_area_scope",
   "department_scope",
   "category_scope",
   "sec_validity",
@@ -34,7 +34,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Role",
-   "options": "Farmer\nAssisted-Submissions\nL1 Nodal Officer\nL2 Senior Nodal Officer\nDepartment Head\nOAN Administrator-ATI",
+   "options": "Grievance Submitter\nGrievance Officer\nGrievance Admin",
    "reqd": 1
   },
   {
@@ -49,10 +49,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Single value at scaffold stage; FSD 3.1.1 implies a multi-value scope",
-   "fieldname": "region_scope",
-   "fieldtype": "Data",
-   "label": "Region Scope"
+   "description": "Scoping tree node. Officer can access all grievances in this sub-tree (interval containment).",
+   "fieldname": "administrative_area_scope",
+   "fieldtype": "Link",
+   "label": "Administrative Area Scope",
+   "options": "Administrative Area"
   },
   {
    "fieldname": "department_scope",
@@ -105,26 +106,34 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
+   "role": "Grievance Admin",
    "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
    "report": 1,
-   "role": "OAN Administrator-ATI",
+   "export": 1,
    "share": 1,
-   "write": 1
+   "print": 1,
+   "email": 1
   },
   {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
    "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "report": 1,
+   "export": 1,
    "share": 1,
-   "write": 1
+   "print": 1,
+   "email": 1
   }
  ],
  "row_format": "Dynamic",

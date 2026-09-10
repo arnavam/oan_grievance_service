@@ -15,4 +15,3 @@ Endpoints
 """
 
 VERSION = "v1"
-

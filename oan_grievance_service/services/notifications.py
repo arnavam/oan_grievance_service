@@ -67,8 +67,10 @@ def render(template, grievance):
 		"status": grievance.status or "",
 		"department": grievance.assigned_dept or "",
 		"sla_due_date": grievance.sla_due_date or "",
-		"region": grievance.region or "",
-		"woreda": grievance.woreda or "",
+		"administrative_area": getattr(grievance, "administrative_area", "") or "",
+		"administrative_unit": getattr(grievance, "administrative_unit", "") or "",
+		"region": getattr(grievance, "administrative_area", "") or "",
+		"woreda": getattr(grievance, "administrative_unit", "") or "",
 	}
 	rendered = template
 	for key, value in context.items():
@@ -143,13 +145,14 @@ def dispatch_queued(limit=100):
 			if row.channel == "Email" and "@" in (row.recipient or ""):
 				frappe.sendmail(
 					recipients=[row.recipient],
-					subject=f"Grievance update",
+					subject="Grievance update",
 					message=row.message,
 					delayed=True,
 				)
 			# SMS: FSD section 6 names an external gateway. Integration point.
 			frappe.db.set_value(
-				"Grievance Notification Log", row.name,
+				"Grievance Notification Log",
+				row.name,
 				{"status": "Sent", "sent_at": now_datetime()},
 				update_modified=False,
 			)
@@ -159,7 +162,10 @@ def dispatch_queued(limit=100):
 				message=frappe.get_traceback(),
 			)
 			frappe.db.set_value(
-				"Grievance Notification Log", row.name, "status", "Failed",
+				"Grievance Notification Log",
+				row.name,
+				"status",
+				"Failed",
 				update_modified=False,
 			)
 

@@ -1,0 +1,1204 @@
+{
+	"info": {
+		"_postman_id": "8f5a2d1e-3c7b-419a-9e2d-4b8c1a7d6e5f",
+		"name": "OAN Grievance Service API",
+		"description": "Postman collection for OpenAgriNet Grievance Management Module v1 API endpoints covering public reference metadata, authentication (Farmer & Organization registration with dedupe keys), submitter profile lookups, grievance intake & submission, tracking, reply, escalation, resolution confirmation, and reopen flows.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "user_email",
+			"value": "abebe.farmer@example.com",
+			"type": "string"
+		},
+		{
+			"key": "user_password",
+			"value": "OpenAgriNet@2026",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ticket_number",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "profile_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "submitter_type",
+			"value": "Individual Farmer",
+			"type": "string"
+		},
+		{
+			"key": "submitter_name",
+			"value": "Abebe Bikila",
+			"type": "string"
+		},
+		{
+			"key": "contact_mobile",
+			"value": "+251911887766",
+			"type": "string"
+		},
+		{
+			"key": "fayda_id",
+			"value": "ET-FAYDA-9876543210",
+			"type": "string"
+		},
+		{
+			"key": "organization_name",
+			"value": "Oromia Seed Producers Cooperative Union",
+			"type": "string"
+		},
+		{
+			"key": "registration_number",
+			"value": "COOP-OROM-2024-0089",
+			"type": "string"
+		},
+		{
+			"key": "authorized_representative",
+			"value": "Tolasa Gemechu",
+			"type": "string"
+		},
+		{
+			"key": "org_email",
+			"value": "coop.oromia@example.com",
+			"type": "string"
+		},
+		{
+			"key": "org_mobile",
+			"value": "+251911223344",
+			"type": "string"
+		},
+		{
+			"key": "submission_channel",
+			"value": "Mobile App",
+			"type": "string"
+		},
+		{
+			"key": "administrative_area",
+			"value": "kebele-ET140108101008",
+			"type": "string"
+		},
+		{
+			"key": "administrative_unit",
+			"value": "Kebele 01 Center",
+			"type": "string"
+		},
+		{
+			"key": "preferred_language",
+			"value": "en",
+			"type": "string"
+		},
+		{
+			"key": "service_category",
+			"value": "Inputs",
+			"type": "string"
+		},
+		{
+			"key": "grievance_type",
+			"value": "Fertilizer Shortage",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Public Reference Data",
+			"item": [
+				{
+					"name": "1. Get Submitter Options (Public)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var baseUrl = pm.environment.get(\"base_url\") || pm.collectionVariables.get(\"base_url\");",
+									"if (!baseUrl) {",
+									"    console.warn(\"[Pre-request] 'base_url' is empty. Defaulting to http://localhost:8000.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Public options returned with submitter types and languages\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var envelope = jsonData.message || jsonData;",
+									"    var data = envelope.data || envelope;",
+									"    pm.expect(data).to.have.property(\"submitter_types\");",
+									"    pm.expect(data).to.have.property(\"submission_types\");",
+									"    pm.expect(data).to.have.property(\"preferred_languages\");",
+									"    pm.expect(data).to.have.property(\"service_categories\");",
+									"    pm.expect(data).to.have.property(\"grievance_types\");",
+									"    pm.expect(Array.isArray(data.submitter_types)).to.be.true;",
+									"    pm.expect(Array.isArray(data.submission_types)).to.be.true;",
+									"    pm.expect(Array.isArray(data.service_categories)).to.be.true;",
+									"    pm.expect(Array.isArray(data.grievance_types)).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.submitter.options",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.submitter.options"
+							]
+						},
+						"description": "Public reference endpoint reachable without authentication. Retrieves dropdown data for submitters, intake forms and public wizards, including active submitter types (Individual Farmer, Development Agent, Cooperative, NGO, etc.), intake channels, supported languages, country phone extensions (ISD codes), grievance lifecycle statuses, service categories, and grievance types."
+					},
+					"response": []
+				},
+				{
+					"name": "1b. Get Administrative Areas (Public - Cascading/Search)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var baseUrl = pm.environment.get(\"base_url\") || pm.collectionVariables.get(\"base_url\");",
+									"if (!baseUrl) {",
+									"    console.warn(\"[Pre-request] 'base_url' is empty. Defaulting to http://localhost:8000.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Administrative areas returned successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var envelope = jsonData.message || jsonData;",
+									"    var data = envelope.data || envelope;",
+									"    pm.expect(data).to.have.property(\"areas\");",
+									"    pm.expect(Array.isArray(data.areas)).to.be.true;",
+									"    pm.expect(data.areas.length).to.be.greaterThan(0);",
+									"    pm.expect(data.areas[0]).to.have.property(\"area_id\");",
+									"    pm.expect(data.areas[0]).to.have.property(\"area_name\");",
+									"    pm.expect(data.areas[0]).to.have.property(\"level_name\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.administrative_area.get_areas?parent=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.administrative_area.get_areas"
+							],
+							"query": [
+								{
+									"key": "parent",
+									"value": "",
+									"description": "Optional parent ID or path_code (e.g. region-ET14 or ET.ET14). If empty, returns top-level regions."
+								},
+								{
+									"key": "level_name",
+									"value": "",
+									"description": "Optional level filter: Region, Zone, Woreda, Kebele",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Optional search string matching area name",
+									"disabled": true
+								},
+								{
+									"key": "ancestors_of",
+									"value": "",
+									"description": "Optional area ID to get breadcrumbs hierarchy",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Public cascading location endpoint. Returns top-level Regions when called without parameters, or child areas (Zones, Woredas, Kebeles) when a 'parent' is provided. Also supports text search and ancestor breadcrumb lookups."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "2a. Register User (Individual Farmer - Fayda / Phone)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var baseUrl = pm.environment.get(\"base_url\") || pm.collectionVariables.get(\"base_url\");",
+									"if (!baseUrl) {",
+									"    console.warn(\"[Pre-request] 'base_url' is empty. Defaulting to http://localhost:8000.\");",
+									"}",
+									"",
+									"// Generate fresh unique test credentials to avoid collision on repeated runs",
+									"var randSuffix = Date.now().toString().slice(-6) + Math.floor(100 + Math.random() * 900);",
+									"var dynamicEmail = \"abebe.farmer.\" + randSuffix + \"@example.com\";",
+									"var dynamicMobile = \"+2519\" + randSuffix;",
+									"var dynamicFayda = \"ET-FAYDA-\" + randSuffix;",
+									"",
+									"pm.collectionVariables.set(\"user_email\", dynamicEmail);",
+									"pm.collectionVariables.set(\"contact_mobile\", dynamicMobile);",
+									"pm.collectionVariables.set(\"fayda_id\", dynamicFayda);",
+									"if (pm.environment.name) {",
+									"    pm.environment.set(\"user_email\", dynamicEmail);",
+									"    pm.environment.set(\"contact_mobile\", dynamicMobile);",
+									"    pm.environment.set(\"fayda_id\", dynamicFayda);",
+									"}",
+									"console.log(\"[Pre-request] Generated fresh test credentials:\", dynamicEmail, dynamicMobile, dynamicFayda);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var envelope = jsonData.message || jsonData;",
+									"    var data = envelope.data || envelope;",
+									"    ",
+									"    pm.test(\"Response contains tokens\", function () {",
+									"        pm.expect(data).to.have.property(\"access_token\");",
+									"        pm.expect(data).to.have.property(\"refresh_token\");",
+									"    });",
+									"",
+									"    if (data && data.access_token) {",
+									"        pm.collectionVariables.set(\"access_token\", data.access_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"access_token\", data.access_token);",
+									"        }",
+									"        console.log(\"[Post-response] Saved access_token:\", data.access_token);",
+									"    }",
+									"    if (data && data.refresh_token) {",
+									"        pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"        }",
+									"        console.log(\"[Post-response] Saved refresh_token:\", data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"{{submitter_name}}\",\n    \"email\": \"{{user_email}}\",\n    \"phone_number\": \"{{contact_mobile}}\",\n    \"password\": \"{{user_password}}\",\n    \"role\": \"Grievance Submitter\",\n    \"submitter_type\": \"Individual Farmer\",\n    \"fayda_id\": \"{{fayda_id}}\",\n    \"administrative_area\": \"{{administrative_area}}\",\n    \"administrative_unit\": \"{{administrative_unit}}\",\n    \"preferred_language\": \"{{preferred_language}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_auth_service.api.v1.auth.register_user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_auth_service.api.v1.auth.register_user"
+							]
+						},
+						"description": "Registers an Individual Farmer account. Derives canonical dedupe_key as 'fayda:<fayda_id>' or 'phone:<contact_mobile>', initializes the Submitter Profile, and issues access/refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "2b. Register User (Organization / Cooperative - Reg No & Rep)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var baseUrl = pm.environment.get(\"base_url\") || pm.collectionVariables.get(\"base_url\");",
+									"if (!baseUrl) {",
+									"    console.warn(\"[Pre-request] 'base_url' is empty. Defaulting to http://localhost:8000.\");",
+									"}",
+									"",
+									"// Generate fresh unique organization credentials to avoid collision on repeated runs",
+									"var randSuffix = Date.now().toString().slice(-6) + Math.floor(100 + Math.random() * 900);",
+									"var dynamicOrgEmail = \"coop.oromia.\" + randSuffix + \"@example.com\";",
+									"var dynamicOrgMobile = \"+2519\" + randSuffix;",
+									"var dynamicRegNo = \"COOP-OROM-\" + randSuffix;",
+									"",
+									"pm.collectionVariables.set(\"org_email\", dynamicOrgEmail);",
+									"pm.collectionVariables.set(\"org_mobile\", dynamicOrgMobile);",
+									"pm.collectionVariables.set(\"registration_number\", dynamicRegNo);",
+									"if (pm.environment.name) {",
+									"    pm.environment.set(\"org_email\", dynamicOrgEmail);",
+									"    pm.environment.set(\"org_mobile\", dynamicOrgMobile);",
+									"    pm.environment.set(\"registration_number\", dynamicRegNo);",
+									"}",
+									"console.log(\"[Pre-request] Generated fresh organization test credentials:\", dynamicOrgEmail, dynamicRegNo);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var envelope = jsonData.message || jsonData;",
+									"    var data = envelope.data || envelope;",
+									"    ",
+									"    pm.test(\"Organization user registered with tokens\", function () {",
+									"        pm.expect(data).to.have.property(\"access_token\");",
+									"        pm.expect(data).to.have.property(\"refresh_token\");",
+									"    });",
+									"",
+									"    if (data && data.access_token) {",
+									"        pm.collectionVariables.set(\"access_token\", data.access_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"access_token\", data.access_token);",
+									"        }",
+									"        console.log(\"[Post-response] Saved Organization access_token:\", data.access_token);",
+									"    }",
+									"    if (data && data.refresh_token) {",
+									"        pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"        }",
+									"        console.log(\"[Post-response] Saved Organization refresh_token:\", data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"{{authorized_representative}}\",\n    \"email\": \"{{org_email}}\",\n    \"phone_number\": \"{{org_mobile}}\",\n    \"password\": \"{{user_password}}\",\n    \"role\": \"Grievance Submitter\",\n    \"submitter_type\": \"Cooperative\",\n    \"organization_name\": \"{{organization_name}}\",\n    \"registration_number\": \"{{registration_number}}\",\n    \"representative_name\": \"{{authorized_representative}}\",\n    \"administrative_area\": \"{{administrative_area}}\",\n    \"administrative_unit\": \"{{administrative_unit}}\",\n    \"preferred_language\": \"{{preferred_language}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_auth_service.api.v1.auth.register_user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_auth_service.api.v1.auth.register_user"
+							]
+						},
+						"description": "Registers an Organization (Cooperative, FPO, NGO, or Local Body). Takes the Organization Name, official Registration Number (which forms dedupe_key as 'org:<registration_number>'), and Authorized Representative contact details."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Login",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var baseUrl = pm.environment.get(\"base_url\") || pm.collectionVariables.get(\"base_url\");",
+									"var user = pm.environment.get(\"user_email\") || pm.collectionVariables.get(\"user_email\");",
+									"var pwd = pm.environment.get(\"user_password\") || pm.collectionVariables.get(\"user_password\");",
+									"",
+									"if (!baseUrl) {",
+									"    console.warn(\"[Pre-request] 'base_url' is empty.\");",
+									"}",
+									"if (!user || !pwd) {",
+									"    console.warn(\"[Pre-request] 'user_email' or 'user_password' is empty. Set credentials before logging in.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var envelope = jsonData.message || jsonData;",
+									"    var data = envelope.data || envelope;",
+									"    ",
+									"    pm.test(\"Login returned access_token\", function () {",
+									"        pm.expect(data).to.have.property(\"access_token\");",
+									"        pm.expect(data).to.have.property(\"token_type\");",
+									"    });",
+									"",
+									"    if (data && data.access_token) {",
+									"        pm.collectionVariables.set(\"access_token\", data.access_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"access_token\", data.access_token);",
+									"        }",
+									"        console.log(\"[Post-response] Saved access_token:\", data.access_token);",
+									"    }",
+									"    if (data && data.refresh_token) {",
+									"        pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"        }",
+									"        console.log(\"[Post-response] Saved refresh_token:\", data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"usr\": \"{{user_email}}\",\n    \"pwd\": \"{{user_password}}\",\n    \"remember_me\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_auth_service.api.v1.auth.login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_auth_service.api.v1.auth.login"
+							]
+						},
+						"description": "Authenticates user credentials and returns a Bearer access token along with a single-use refresh token. Tokens are automatically saved to Postman variables for subsequent requests."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Refresh Token",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var refreshToken = pm.environment.get(\"refresh_token\") || pm.collectionVariables.get(\"refresh_token\");",
+									"if (!refreshToken) {",
+									"    console.warn(\"[Pre-request] 'refresh_token' is empty. Run Login or Register first to obtain one.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var envelope = jsonData.message || jsonData;",
+									"    var data = envelope.data || envelope;",
+									"    ",
+									"    pm.test(\"Tokens rotated successfully\", function () {",
+									"        pm.expect(data).to.have.property(\"access_token\");",
+									"        pm.expect(data).to.have.property(\"refresh_token\");",
+									"    });",
+									"",
+									"    if (data && data.access_token) {",
+									"        pm.collectionVariables.set(\"access_token\", data.access_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"access_token\", data.access_token);",
+									"        }",
+									"        console.log(\"[Post-response] Rotated access_token:\", data.access_token);",
+									"    }",
+									"    if (data && data.refresh_token) {",
+									"        pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"        }",
+									"        console.log(\"[Post-response] Rotated refresh_token:\", data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_auth_service.api.v1.auth.refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_auth_service.api.v1.auth.refresh"
+							]
+						},
+						"description": "Exchanges a single-use refresh token for a fresh access token and a newly rotated refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Logout",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var refreshToken = pm.environment.get(\"refresh_token\") || pm.collectionVariables.get(\"refresh_token\");",
+									"if (!refreshToken) {",
+									"    console.warn(\"[Pre-request] 'refresh_token' is empty.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.collectionVariables.set(\"access_token\", \"\");",
+									"pm.collectionVariables.set(\"refresh_token\", \"\");",
+									"if (pm.environment.name) {",
+									"    pm.environment.set(\"access_token\", \"\");",
+									"    pm.environment.set(\"refresh_token\", \"\");",
+									"}",
+									"console.log(\"[Post-response] Cleared access_token and refresh_token.\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_auth_service.api.v1.auth.logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_auth_service.api.v1.auth.logout"
+							]
+						},
+						"description": "Revokes the supplied refresh token row from storage and clears local token variables."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Submitter Profiles",
+			"item": [
+				{
+					"name": "6. Get Current Submitter Profile (Me)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var token = pm.environment.get(\"access_token\") || pm.collectionVariables.get(\"access_token\");",
+									"if (!token) {",
+									"    console.warn(\"[Pre-request] 'access_token' is missing. Run Login or Register first.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"    ",
+									"    pm.test(\"Current profile contains identity details\", function () {",
+									"        pm.expect(data).to.have.property(\"profile_id\");",
+									"        pm.expect(data).to.have.property(\"submitter_name\");",
+									"        pm.expect(data).to.have.property(\"identity_scheme\");",
+									"        pm.expect(data).to.have.property(\"identity_value\");",
+									"    });",
+									"",
+									"    if (data && data.profile_id) {",
+									"        pm.collectionVariables.set(\"profile_id\", data.profile_id);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"profile_id\", data.profile_id);",
+									"        }",
+									"        console.log(\"[Post-response] Saved profile_id:\", data.profile_id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.submitter.me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.submitter.me"
+							]
+						},
+						"description": "Fetches the Submitter Profile associated with the currently authenticated user, including decomposed identity scheme and value variables (Fayda ID / registration number)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Grievance Operations",
+			"item": [
+				{
+					"name": "7. Submit Grievance",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var token = pm.environment.get(\"access_token\") || pm.collectionVariables.get(\"access_token\");",
+									"var area = pm.environment.get(\"administrative_area\") || pm.collectionVariables.get(\"administrative_area\");",
+									"var cat = pm.environment.get(\"service_category\") || pm.collectionVariables.get(\"service_category\");",
+									"var gtype = pm.environment.get(\"grievance_type\") || pm.collectionVariables.get(\"grievance_type\");",
+									"",
+									"if (!token) {",
+									"    console.warn(\"[Pre-request] 'access_token' is missing. Please log in or register before submitting.\");",
+									"}",
+									"if (!area || !cat || !gtype) {",
+									"    console.warn(\"[Pre-request] Grievance parameters missing (area, category, or grievance type).\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"    ",
+									"    pm.test(\"Ticket number and initial status generated\", function () {",
+									"        pm.expect(data).to.have.property(\"ticket_number\");",
+									"        pm.expect(data).to.have.property(\"status\");",
+									"        pm.expect(data.status).to.eql(\"Submitted\");",
+									"    });",
+									"    ",
+									"    if (data.ticket_number) {",
+									"        pm.collectionVariables.set(\"ticket_number\", data.ticket_number);",
+									"        if (pm.environment.name) {",
+									"            pm.environment.set(\"ticket_number\", data.ticket_number);",
+									"        }",
+									"        console.log(\"[Post-response] Saved ticket_number:\", data.ticket_number);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"submitter_type\": \"{{submitter_type}}\",\n    \"submitter_name\": \"{{submitter_name}}\",\n    \"contact_mobile\": \"{{contact_mobile}}\",\n    \"submission_channel\": \"{{submission_channel}}\",\n    \"administrative_area\": \"{{administrative_area}}\",\n    \"administrative_unit\": \"{{administrative_unit}}\",\n    \"service_category\": \"{{service_category}}\",\n    \"grievance_type\": \"{{grievance_type}}\",\n    \"description\": \"Fertilizer distribution voucher delayed for Kebele 01 farming cooperative.\",\n    \"desired_outcome\": \"Immediate disbursement of fertilizer vouchers before planting season.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.grievance.submit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.grievance.submit"
+							]
+						},
+						"description": "FSD 4.1: Submits a new grievance. Validates required fields, snapshots administrative path code, executes nearest-ancestor routing, generates ticket number, queues acknowledgement notification, and returns ticket summary."
+					},
+					"response": []
+				},
+				{
+					"name": "8. Track Grievance",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var ticket = pm.environment.get(\"ticket_number\") || pm.collectionVariables.get(\"ticket_number\");",
+									"if (!ticket) {",
+									"    console.warn(\"[Pre-request] 'ticket_number' is empty. Run 'Submit Grievance' first or set ticket_number in variables.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Tracking summary contains ticket and SLA metrics\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"    pm.expect(data).to.have.property(\"ticket_number\");",
+									"    pm.expect(data).to.have.property(\"status\");",
+									"    pm.expect(data).to.have.property(\"sla_due_date\");",
+									"    pm.expect(data).to.have.property(\"sla_consumed_percent\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.grievance.track?ticket_number={{ticket_number}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.grievance.track"
+							],
+							"query": [
+								{
+									"key": "ticket_number",
+									"value": "{{ticket_number}}"
+								}
+							]
+						},
+						"description": "Submitter-facing tracking lookup for the portal, mobile app, and IVR. Returns current status, assigned department, SLA deadline, consumed SLA percentage, and confirmation window."
+					},
+					"response": []
+				},
+				{
+					"name": "9. Reply to More Info Request",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var ticket = pm.environment.get(\"ticket_number\") || pm.collectionVariables.get(\"ticket_number\");",
+									"var token = pm.environment.get(\"access_token\") || pm.collectionVariables.get(\"access_token\");",
+									"",
+									"if (!ticket) {",
+									"    console.warn(\"[Pre-request] 'ticket_number' is empty.\");",
+									"}",
+									"if (!token) {",
+									"    console.warn(\"[Pre-request] 'access_token' is missing.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"pm.test(\"Reply acknowledged with ticket number\", function () {",
+									"    pm.expect(data).to.have.property(\"ticket_number\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ticket_number\": \"{{ticket_number}}\",\n    \"body\": \"Additional fertilizer receipt voucher reference is VR-2026-9912 attached for verification.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.grievance.reply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.grievance.reply"
+							]
+						},
+						"description": "FSD Appendix C: Allows the submitter to answer a 'More Information Needed' request from the handling officer."
+					},
+					"response": []
+				},
+				{
+					"name": "10. Escalate Grievance",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var ticket = pm.environment.get(\"ticket_number\") || pm.collectionVariables.get(\"ticket_number\");",
+									"var token = pm.environment.get(\"access_token\") || pm.collectionVariables.get(\"access_token\");",
+									"",
+									"if (!ticket) {",
+									"    console.warn(\"[Pre-request] 'ticket_number' is empty.\");",
+									"}",
+									"if (!token) {",
+									"    console.warn(\"[Pre-request] 'access_token' is missing.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"pm.test(\"Escalation response confirmed\", function () {",
+									"    pm.expect(data).to.have.property(\"ticket_number\");",
+									"    pm.expect(data).to.have.property(\"escalated\");",
+									"    pm.expect(data.escalated).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ticket_number\": \"{{ticket_number}}\",\n    \"reason\": \"SLA window elapsed without preliminary response or status update from the department.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.grievance.escalate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.grievance.escalate"
+							]
+						},
+						"description": "FSD 3.7: Allows the submitter to trigger a manual escalation once the SLA window has expired."
+					},
+					"response": []
+				},
+				{
+					"name": "11. Confirm Resolution",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var ticket = pm.environment.get(\"ticket_number\") || pm.collectionVariables.get(\"ticket_number\");",
+									"var token = pm.environment.get(\"access_token\") || pm.collectionVariables.get(\"access_token\");",
+									"",
+									"if (!ticket) {",
+									"    console.warn(\"[Pre-request] 'ticket_number' is empty.\");",
+									"}",
+									"if (!token) {",
+									"    console.warn(\"[Pre-request] 'access_token' is missing.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"pm.test(\"Grievance status marked Closed\", function () {",
+									"    pm.expect(data).to.have.property(\"ticket_number\");",
+									"    pm.expect(data.status).to.eql(\"Closed\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ticket_number\": \"{{ticket_number}}\",\n    \"rating\": 5,\n    \"comments\": \"Issue resolved swiftly by the Woreda agricultural desk. Thank you!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.grievance.confirm",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.grievance.confirm"
+							]
+						},
+						"description": "FSD 3.6 / UC-03: The submitter confirms the resolution provided by the officer, submitting an optional 1-5 satisfaction rating and comments, transitioning the case to Closed."
+					},
+					"response": []
+				},
+				{
+					"name": "12. Reopen Grievance",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var ticket = pm.environment.get(\"ticket_number\") || pm.collectionVariables.get(\"ticket_number\");",
+									"var token = pm.environment.get(\"access_token\") || pm.collectionVariables.get(\"access_token\");",
+									"",
+									"if (!ticket) {",
+									"    console.warn(\"[Pre-request] 'ticket_number' is empty.\");",
+									"}",
+									"if (!token) {",
+									"    console.warn(\"[Pre-request] 'access_token' is missing.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"var data = (jsonData.message && jsonData.message.data) ? jsonData.message.data : (jsonData.data || jsonData);",
+									"pm.test(\"Reopen returned valid status\", function () {",
+									"    pm.expect(data).to.have.property(\"ticket_number\");",
+									"    pm.expect(data).to.have.property(\"status\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ticket_number\": \"{{ticket_number}}\",\n    \"reason\": \"The replacement voucher could not be redeemed at the local distribution center.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/oan_grievance_service.api.v1.grievance.reopen",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"method",
+								"oan_grievance_service.api.v1.grievance.reopen"
+							]
+						},
+						"description": "FSD 3.6: Reopens a resolved grievance within the confirmation window with a mandatory reason."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

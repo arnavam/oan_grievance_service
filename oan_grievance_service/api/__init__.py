@@ -48,4 +48,3 @@ def version_meta(version=CURRENT_VERSION):
 	if info.get("sunset_on"):
 		meta["sunset_on"] = info["sunset_on"]
 	return meta
-

@@ -9,38 +9,25 @@
  "field_order": [
   "submitter_type",
   "submitter_name",
-  "fayda_id",
-  "org_reg_number",
+  "dedupe_key",
+  "user",
   "col_contact",
   "contact_mobile",
   "contact_email",
   "active",
+  "is_blocked",
+  "blocked_reason",
   "sec_area",
-  "region",
-  "zone",
-  "col_area",
-  "woreda",
-  "kebele",
-  "sec_rep",
-  "authorized_rep_name",
-  "authorized_rep_fayda_id",
-  "col_rep",
-  "member_count",
-  "area_covered",
-  "sec_farmer",
-  "farmer_id",
-  "land_parcel_reference",
-  "col_farmer",
-  "crop_type",
-  "service_provider"
+  "administrative_area",
+  "administrative_unit"
  ],
  "fields": [
   {
    "fieldname": "submitter_type",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Submitter Type",
-   "options": "Individual Farmer\nCooperative\nFPO\nNGO\nWoreda/Kebele Body\nDevelopment Agent",
+   "options": "Submitter Type",
    "reqd": 1
   },
   {
@@ -51,15 +38,19 @@
    "reqd": 1
   },
   {
-   "description": "FSD 3.1: primary identity for individual submitters",
-   "fieldname": "fayda_id",
+   "description": "Canonical, scheme-prefixed party key: fayda:<id>, org:<no> or phone:<e164>. The one indexed column party resolution and duplicate detection match on.",
+   "fieldname": "dedupe_key",
    "fieldtype": "Data",
-   "label": "Fayda ID"
+   "in_standard_filter": 1,
+   "label": "Dedupe Key",
+   "unique": 1
   },
   {
-   "fieldname": "org_reg_number",
-   "fieldtype": "Data",
-   "label": "Organization Registration Number"
+   "description": "The login this profile belongs to. Ownership is resolved through this link, not through contact_email, so a changed contact address cannot transfer cases.",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User Account",
+   "options": "User"
   },
   {
    "fieldname": "col_contact",
@@ -84,101 +75,43 @@
    "label": "Active"
   },
   {
+   "default": "0",
+   "description": "Intake aborts for a blocked party. Existing cases are unaffected.",
+   "fieldname": "is_blocked",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Blocked"
+  },
+  {
+   "depends_on": "is_blocked",
+   "fieldname": "blocked_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason for Block",
+   "mandatory_depends_on": "is_blocked"
+  },
+  {
    "fieldname": "sec_area",
    "fieldtype": "Section Break",
-   "label": "Geographic Area"
+   "label": "Administrative Scope"
   },
   {
-   "fieldname": "region",
+   "fieldname": "administrative_area",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Region",
-   "options": "Region",
-   "reqd": 1
+   "label": "Administrative Area",
+   "options": "Administrative Area"
   },
   {
-   "fieldname": "zone",
+   "description": "The administrative body or unit this submitter represents.",
+   "fieldname": "administrative_unit",
    "fieldtype": "Data",
-   "label": "Zone"
-  },
-  {
-   "fieldname": "col_area",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "woreda",
-   "fieldtype": "Link",
-   "label": "Woreda",
-   "options": "Woreda"
-  },
-  {
-   "fieldname": "kebele",
-   "fieldtype": "Data",
-   "label": "Kebele"
-  },
-  {
-   "fieldname": "sec_rep",
-   "fieldtype": "Section Break",
-   "label": "Authorized Representative"
-  },
-  {
-   "fieldname": "authorized_rep_name",
-   "fieldtype": "Data",
-   "label": "Authorized Representative Name"
-  },
-  {
-   "fieldname": "authorized_rep_fayda_id",
-   "fieldtype": "Data",
-   "label": "Representative Fayda ID"
-  },
-  {
-   "fieldname": "col_rep",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "member_count",
-   "fieldtype": "Int",
-   "label": "Member / Affected Count"
-  },
-  {
-   "fieldname": "area_covered",
-   "fieldtype": "Data",
-   "label": "Area Covered"
-  },
-  {
-   "fieldname": "sec_farmer",
-   "fieldtype": "Section Break",
-   "label": "Farmer Context"
-  },
-  {
-   "fieldname": "farmer_id",
-   "fieldtype": "Data",
-   "label": "Farmer ID"
-  },
-  {
-   "fieldname": "land_parcel_reference",
-   "fieldtype": "Data",
-   "label": "Land Parcel Reference"
-  },
-  {
-   "fieldname": "col_farmer",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "crop_type",
-   "fieldtype": "Data",
-   "label": "Crop Type"
-  },
-  {
-   "fieldname": "service_provider",
-   "fieldtype": "Data",
-   "label": "Associated Service Provider"
+   "label": "Administrative Unit"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-03 19:13:29.184153",
+ "modified": "2026-09-08 16:15:00.000000",
  "modified_by": "Administrator",
  "module": "Grievance Masters",
  "name": "Submitter Profile",
@@ -186,18 +119,25 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 0,
+   "cancel": 0,
    "create": 1,
+   "delete": 0,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "OAN Administrator-ATI",
+   "role": "Grievance Admin",
    "share": 1,
+   "submit": 0,
    "write": 1
   },
   {
+   "amend": 0,
+   "cancel": 0,
    "create": 1,
+   "delete": 0,
    "email": 1,
    "export": 1,
    "print": 1,
@@ -205,11 +145,44 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Grievance Officer",
+   "share": 1,
+   "submit": 0,
+   "write": 0
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Grievance Submitter",
+   "share": 1,
+   "submit": 0,
    "write": 1
   }
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
+ "search_fields": "dedupe_key,contact_mobile",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

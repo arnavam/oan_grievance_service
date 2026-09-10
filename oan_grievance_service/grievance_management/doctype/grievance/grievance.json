@@ -27,11 +27,11 @@
   "col_anonymity",
   "anonymity_approved_by",
   "sec_area",
-  "region",
-  "zone",
+  "administrative_area",
   "col_area",
-  "woreda",
-  "kebele",
+  "administrative_unit",
+  "area_lft",
+  "area_path_code",
   "sec_classification",
   "service_category",
   "grievance_type",
@@ -122,9 +122,9 @@
   },
   {
    "fieldname": "submitter_type",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Submitter Type",
-   "options": "Individual Farmer\nCooperative\nFPO\nNGO\nWoreda/Kebele Body\nDevelopment Agent",
+   "options": "Submitter Type",
    "reqd": 1
   },
   {
@@ -196,36 +196,43 @@
   {
    "fieldname": "sec_area",
    "fieldtype": "Section Break",
-   "label": "Geographic Area"
+   "label": "Administrative Scope & Area"
   },
   {
-   "fieldname": "region",
+   "description": "The operational administrative leaf node (e.g. Kebele / Ward) where the grievance occurred",
+   "fieldname": "administrative_area",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "in_standard_filter": 1,
-   "label": "Region",
-   "options": "Region",
+   "label": "Administrative Area",
+   "options": "Administrative Area",
    "reqd": 1
-  },
-  {
-   "fieldname": "zone",
-   "fieldtype": "Data",
-   "label": "Zone"
   },
   {
    "fieldname": "col_area",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "woreda",
-   "fieldtype": "Link",
-   "label": "Woreda",
-   "options": "Woreda",
-   "reqd": 1
+   "description": "Specific local facility, branch, or sub-station notes",
+   "fieldname": "administrative_unit",
+   "fieldtype": "Data",
+   "label": "Specific Location / Unit"
   },
   {
-   "fieldname": "kebele",
+   "description": "Denormalised nested set left index for fast range scoping",
+   "fieldname": "area_lft",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Area Left Index",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Frozen snapshot of the dotted hierarchy path at submission time (e.g. ET.OROM.BISH.K01)",
+   "fieldname": "area_path_code",
    "fieldtype": "Data",
-   "label": "Kebele"
+   "label": "Area Path Code Snapshot",
+   "read_only": 1
   },
   {
    "fieldname": "sec_classification",
@@ -415,86 +422,64 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
+   "role": "Grievance Admin",
    "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
    "report": 1,
-   "role": "OAN Administrator-ATI",
+   "export": 1,
    "share": 1,
-   "write": 1
+   "print": 1,
+   "email": 1
   },
   {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
    "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "report": 1,
+   "export": 1,
    "share": 1,
-   "write": 1
+   "print": 1,
+   "email": 1
   },
   {
+   "role": "Grievance Officer",
+   "read": 1,
+   "write": 1,
    "create": 1,
    "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
    "report": 1,
-   "role": "L1 Nodal Officer",
+   "export": 1,
    "share": 1,
-   "write": 1
+   "print": 1,
+   "email": 1
   },
   {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
+   "role": "Grievance Submitter",
    "read": 1,
-   "report": 1,
-   "role": "L2 Senior Nodal Officer",
-   "share": 1,
-   "write": 1
-  },
-  {
+   "write": 1,
    "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
    "report": 1,
-   "role": "Department Head",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
    "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Farmer",
    "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
    "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Assisted-Submissions",
-   "share": 1,
-   "write": 1
+   "email": 1
   }
  ],
  "row_format": "Dynamic",

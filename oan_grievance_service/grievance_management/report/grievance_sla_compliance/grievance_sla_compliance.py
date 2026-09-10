@@ -23,19 +23,38 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Ticket"), "fieldname": "ticket_number", "fieldtype": "Link",
-		 "options": "Grievance", "width": 190},
-		{"label": _("Category"), "fieldname": "service_category", "fieldtype": "Link",
-		 "options": "Service Category", "width": 110},
-		{"label": _("Region"), "fieldname": "region", "fieldtype": "Link",
-		 "options": "Region", "width": 110},
-		{"label": _("Department"), "fieldname": "assigned_dept", "fieldtype": "Link",
-		 "options": "Grievance Department", "width": 180},
+		{
+			"label": _("Ticket"),
+			"fieldname": "ticket_number",
+			"fieldtype": "Link",
+			"options": "Grievance",
+			"width": 190,
+		},
+		{
+			"label": _("Category"),
+			"fieldname": "service_category",
+			"fieldtype": "Link",
+			"options": "Service Category",
+			"width": 110,
+		},
+		{
+			"label": _("Administrative Area"),
+			"fieldname": "administrative_area",
+			"fieldtype": "Link",
+			"options": "Administrative Area",
+			"width": 140,
+		},
+		{
+			"label": _("Department"),
+			"fieldname": "assigned_dept",
+			"fieldtype": "Link",
+			"options": "Grievance Department",
+			"width": 180,
+		},
 		{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 130},
 		{"label": _("SLA Days"), "fieldname": "sla_days", "fieldtype": "Int", "width": 80},
 		{"label": _("Due"), "fieldname": "sla_due_date", "fieldtype": "Datetime", "width": 160},
-		{"label": _("Resolution Days"), "fieldname": "resolution_days", "fieldtype": "Float",
-		 "width": 130},
+		{"label": _("Resolution Days"), "fieldname": "resolution_days", "fieldtype": "Float", "width": 130},
 		{"label": _("Within SLA"), "fieldname": "within_sla", "fieldtype": "Data", "width": 100},
 		{"label": _("Escalated"), "fieldname": "escalated", "fieldtype": "Check", "width": 90},
 	]
@@ -43,18 +62,35 @@ def get_columns():
 
 def get_data(filters):
 	conditions = {}
-	for field in ("service_category", "region", "assigned_dept", "status"):
+	for field in ("service_category", "assigned_dept", "status"):
 		if filters.get(field):
 			conditions[field] = filters[field]
 	if filters.get("from_date") and filters.get("to_date"):
 		conditions["creation"] = ["between", [filters.from_date, filters.to_date]]
 
+	if filters.get("administrative_area"):
+		area_lft, area_rgt = frappe.db.get_value(
+			"Administrative Area", filters.administrative_area, ["lft", "rgt"]
+		) or (None, None)
+		if area_lft is not None and area_rgt is not None:
+			conditions["area_lft"] = ["between", [area_lft, area_rgt]]
+		else:
+			conditions["administrative_area"] = filters.administrative_area
+
 	grievances = frappe.get_all(
 		"Grievance",
 		filters=conditions,
 		fields=[
-			"name", "ticket_number", "service_category", "region", "assigned_dept",
-			"status", "sla_days", "sla_due_date", "creation", "escalated",
+			"name",
+			"ticket_number",
+			"service_category",
+			"administrative_area",
+			"assigned_dept",
+			"status",
+			"sla_days",
+			"sla_due_date",
+			"creation",
+			"escalated",
 		],
 		order_by="creation desc",
 	)
