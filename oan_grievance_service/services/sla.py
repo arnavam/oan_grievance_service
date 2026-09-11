@@ -17,6 +17,7 @@ decision can be reversed without a code change.
 """
 
 import frappe
+from frappe import _
 from frappe.utils import add_days, get_datetime, now_datetime
 
 from oan_grievance_service.services import constants as C
@@ -95,11 +96,13 @@ def extend_for_deferral(grievance, additional_days):
 	if not grievance.sla_due_date:
 		return
 	grievance.db_set(
-		"sla_due_date", add_days(get_datetime(grievance.sla_due_date), additional_days),
+		"sla_due_date",
+		add_days(get_datetime(grievance.sla_due_date), additional_days),
 		update_modified=False,
 	)
 	grievance.db_set(
-		"sla_deferred_days", (grievance.sla_deferred_days or 0) + additional_days,
+		"sla_deferred_days",
+		(grievance.sla_deferred_days or 0) + additional_days,
 		update_modified=False,
 	)
 	# The window moved, so the old reminders are no longer the right ones to suppress.
@@ -107,22 +110,40 @@ def extend_for_deferral(grievance, additional_days):
 	grievance.db_set("reminder_80_sent", 0, update_modified=False)
 
 
+ESCALATION_ROLE_LEVELS = {
+	"L1": "nodal_officer",
+	"L2": "senior_nodal_officer",
+	"L3": "department_head",
+}
+
+
 def escalate(grievance, level, trigger, reason=None, escalated_by=None):
 	"""FSD 3.7: set the overlay flag, raise priority, log, and notify.
 
 	Escalated is a flag, never a status, so the lifecycle stage is left untouched.
 	"""
+	from oan_grievance_service.permissions import find_officer_by_role_level
 	from oan_grievance_service.services import notifications
 
 	if already_escalated_at(grievance.name, level):
 		return None
 
 	policy = resolve_policy(grievance.service_category, grievance.grievance_type)
-	target = None
-	if level == "L2" and policy:
-		target = policy.top_level_authority
-	elif grievance.assigned_dept:
-		target = frappe.db.get_value("Grievance Department", grievance.assigned_dept, "head_of_dept")
+	target = policy.top_level_authority if (level == "L2" and policy and policy.top_level_authority) else None
+
+	if not target:
+		role_level = ESCALATION_ROLE_LEVELS.get(level, "nodal_officer")
+		target = find_officer_by_role_level(
+			role_level,
+			department=grievance.assigned_dept,
+			administrative_area=grievance.administrative_area,
+		)
+
+	if not target and grievance.assigned_dept:
+		dept_field = "senior_officer" if level == "L2" else "nodal_officer"
+		target = frappe.db.get_value(
+			"Grievance Department", grievance.assigned_dept, dept_field
+		) or frappe.db.get_value("Grievance Department", grievance.assigned_dept, "head_of_dept")
 
 	log = frappe.get_doc(
 		{
@@ -150,9 +171,7 @@ def escalate(grievance, level, trigger, reason=None, escalated_by=None):
 
 def already_escalated_at(grievance_name, level):
 	return bool(
-		frappe.db.exists(
-			"Grievance Escalation Log", {"grievance": grievance_name, "escalation_level": level}
-		)
+		frappe.db.exists("Grievance Escalation Log", {"grievance": grievance_name, "escalation_level": level})
 	)
 
 
@@ -173,9 +192,9 @@ def clear_escalation(grievance):
 def manual_escalate(grievance, reason, by_submitter=True):
 	"""FSD 3.7: the submitter may escalate once the SLA window has elapsed."""
 	if not grievance.sla_due_date:
-		frappe.throw("This grievance has no SLA window yet, so it cannot be escalated.")
+		frappe.throw(_("This grievance has no SLA window yet, so it cannot be escalated."))
 	if get_datetime(grievance.sla_due_date) > now_datetime():
-		frappe.throw("The SLA window has not elapsed yet, so escalation is not available.")
+		frappe.throw(_("The SLA window has not elapsed yet, so escalation is not available."))
 
 	return escalate(
 		grievance,

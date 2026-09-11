@@ -1,0 +1,103 @@
+{
+	"id": "7b8e9f2a-1c3d-4e5f-8a9b-0c1d2e3f4a5b",
+	"name": "OAN Grievance Environment",
+	"values": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "user_email",
+			"value": "abebe.farmer@example.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "user_password",
+			"value": "OpenAgriNet@2026",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "ticket_number",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "submitter_type",
+			"value": "Individual Farmer",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "submitter_name",
+			"value": "Abebe Bikila",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "contact_mobile",
+			"value": "+251911887766",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "fayda_id",
+			"value": "ET-FAYDA-9876543210",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "submission_channel",
+			"value": "Mobile App",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "administrative_area",
+			"value": "kebele-ET140108101008",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "administrative_unit",
+			"value": "Kebele 01 Center",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "preferred_language",
+			"value": "en",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "service_category",
+			"value": "Inputs",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "grievance_type",
+			"value": "Fertilizer Shortage",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}

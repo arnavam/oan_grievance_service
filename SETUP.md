@@ -11,18 +11,18 @@ container, never on the Windows host.
 
 ## 1. Tech stack
 
-| Layer | Component | Version used |
-| --- | --- | --- |
-| Container runtime | Docker Desktop (WSL 2 backend) | 29.7.2 |
-| Dev environment | `frappe/frappe_docker` dev container | `frappe/bench:latest` |
-| Bench CLI | frappe-bench | 5.31.0 |
-| Framework | Frappe | 15.120.0 (`version-15`) |
-| Language | Python | 3.14.2 (app requires >= 3.10) |
-| Front-end toolchain | Node | 24.13.0 |
-| Database | MariaDB | 11.8 |
-| Cache / queue | Redis | alpine (two instances) |
-| App | `oan_grievance_service` | 0.0.1 |
-| Modules | 6, split by FSD area | 22 doctypes, 6 roles |
+| Layer               | Component                            | Version used                  |
+| ------------------- | ------------------------------------ | ----------------------------- |
+| Container runtime   | Docker Desktop (WSL 2 backend)       | 29.7.2                        |
+| Dev environment     | `frappe/frappe_docker` dev container | `frappe/bench:latest`         |
+| Bench CLI           | frappe-bench                         | 5.31.0                        |
+| Framework           | Frappe                               | 15.120.0 (`version-15`)       |
+| Language            | Python                               | 3.14.2 (app requires >= 3.10) |
+| Front-end toolchain | Node                                 | 24.13.0                       |
+| Database            | MariaDB                              | 11.8                          |
+| Cache / queue       | Redis                                | alpine (two instances)        |
+| App                 | `oan_grievance_service`              | 0.0.1                         |
+| Modules             | 6, split by FSD area                 | 22 doctypes, 6 roles          |
 
 The app itself ships no server, no ORM and no migration engine. Frappe supplies all
 three. See `ARCHITECTURE` notes or the published architecture diagram for how the layers
@@ -36,7 +36,7 @@ Install these on the Windows host before starting.
 
 - **Docker Desktop** with the WSL 2 backend enabled.
 - **Git**. Commands below assume Git Bash.
-- **VS Code** with the *Dev Containers* extension. Optional, but it handles port
+- **VS Code** with the _Dev Containers_ extension. Optional, but it handles port
   forwarding for you.
 
 You do **not** need Python, Node, MariaDB or Redis on the host. They all live in the
@@ -132,14 +132,14 @@ Four containers should come up:
 docker ps --filter "name=oan_grievance_dev" --format "table {{.Names}}\t{{.Status}}"
 ```
 
-| Container | Role |
-| --- | --- |
-| `oan_grievance_dev-frappe-1` | bench, where you run every command |
-| `oan_grievance_dev-mariadb-1` | database |
-| `oan_grievance_dev-redis-cache-1` | metadata and session cache |
-| `oan_grievance_dev-redis-queue-1` | background jobs and scheduler |
+| Container                         | Role                               |
+| --------------------------------- | ---------------------------------- |
+| `oan_grievance_dev-frappe-1`      | bench, where you run every command |
+| `oan_grievance_dev-mariadb-1`     | database                           |
+| `oan_grievance_dev-redis-cache-1` | metadata and session cache         |
+| `oan_grievance_dev-redis-queue-1` | background jobs and scheduler      |
 
-From here on, either open the folder in VS Code and *Reopen in Container*, or shell in:
+From here on, either open the folder in VS Code and _Reopen in Container_, or shell in:
 
 ```bash
 docker exec -it oan_grievance_dev-frappe-1 bash
@@ -217,8 +217,7 @@ bench new-site grievance.localhost \
 The MariaDB root password `123` comes from the compose file. A site is a database, so
 each site you create gets its own schema.
 
-Two harmless messages appear here. `MariaDB version 11.8 is more than 10.8 which is not
-yet tested` is an upstream version check, and `*** Scheduler is disabled ***` is the
+Two harmless messages appear here. `MariaDB version 11.8 is more than 10.8 which is not yet tested` is an upstream version check, and `*** Scheduler is disabled ***` is the
 default for a new site.
 
 ### 3.10 Install the app and enable developer mode
@@ -266,16 +265,16 @@ does not, add it to `C:\Windows\System32\drivers\etc\hosts`.
 
 Run all of these from `/workspace/development/frappe-bench` inside the container.
 
-| Task | Command |
-| --- | --- |
-| Start the dev server | `bench start` |
-| Apply schema changes | `bench --site grievance.localhost migrate` |
-| Open a Python shell | `bench --site grievance.localhost console` |
-| Open a SQL shell | `bench --site grievance.localhost mariadb` |
-| Run the app's tests | `bench --site grievance.localhost run-tests --app oan_grievance_service` |
-| Rebuild assets | `bench build --app oan_grievance_service` |
-| Clear caches | `bench --site grievance.localhost clear-cache` |
-| Tail logs | `bench --site grievance.localhost show-config` then check `logs/` |
+| Task                 | Command                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| Start the dev server | `bench start`                                                            |
+| Apply schema changes | `bench --site grievance.localhost migrate`                               |
+| Open a Python shell  | `bench --site grievance.localhost console`                               |
+| Open a SQL shell     | `bench --site grievance.localhost mariadb`                               |
+| Run the app's tests  | `bench --site grievance.localhost run-tests --app oan_grievance_service` |
+| Rebuild assets       | `bench build --app oan_grievance_service`                                |
+| Clear caches         | `bench --site grievance.localhost clear-cache`                           |
+| Tail logs            | `bench --site grievance.localhost show-config` then check `logs/`        |
 
 ### Creating a doctype
 
@@ -298,7 +297,7 @@ C:\Users\shail\oan_grievance_service_devcontainer\     <- mounted as /workspace
     development/frappe-bench/apps/oan_grievance_service/   <- what bench runs
 ```
 
-The compose file mounts the *devcontainer* folder, not the repository, so changes made
+The compose file mounts the _devcontainer_ folder, not the repository, so changes made
 by bench land in the bench copy and must be copied back to the repository by hand.
 
 ### Recommended: mount the repository instead
@@ -333,31 +332,33 @@ Twenty-two doctypes across six modules, split along the FSD's own functional
 decomposition rather than one flat module. Moving a doctype between modules after
 deployment means a patch on every site, so the split is worth getting right early.
 
-| Module | Doctypes | FSD area |
-| --- | --- | --- |
-| Grievance Management | Grievance, Grievance Response, Grievance Comment, Grievance Status History, Grievance Duplicate, Grievance Anonymity Request | FR-02/04/05/06 — the case and its lifecycle |
-| Grievance Masters | Service Category, Grievance Type, Region, Woreda, Grievance Department, Submitter Profile | 3.2.2, 3.11.8, Appendix A — reference data |
-| Grievance SLA | Grievance SLA Configuration, Grievance SLA Deferral, Grievance Escalation Log | FR-07, 3.11.7 — windows, deferrals, escalation |
-| Grievance Notification | Grievance Notification Config, Grievance Notification Log, Grievance Response Template | FR-08, Appendix C — matrix and templates |
-| Grievance Routing | Grievance Routing Rule, Grievance Reassignment Request | FR-03, 3.3.1 — routing and reassignment |
-| Grievance Access Control | Grievance RBAC Assignment, Grievance Access Audit Event | FR-01, 3.1.1, FR-10 — scope and audit |
+| Module                   | Doctypes                                                                                                                        | FSD area                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Grievance Management     | Grievance, Grievance Response, Grievance Comment, Grievance Status History, Grievance Duplicate, Grievance Anonymity Request    | FR-02/04/05/06 — the case and its lifecycle    |
+| Grievance Masters        | Service Category, Grievance Type, Administrative Area, Grievance Department, Submitter Profile, Submitter Type, Submission Type | 3.2.2, 3.11.8, Appendix A — reference data     |
+| Grievance SLA            | Grievance SLA Configuration, Grievance SLA Deferral, Grievance Escalation Log                                                   | FR-07, 3.11.7 — windows, deferrals, escalation |
+| Grievance Notification   | Grievance Notification Config, Grievance Notification Log, Grievance Response Template                                          | FR-08, Appendix C — matrix and templates       |
+| Grievance Routing        | Grievance Routing Rule, Grievance Reassignment Request                                                                          | FR-03, 3.3.1 — routing and reassignment        |
+| Grievance Access Control | Grievance RBAC Assignment, Grievance Access Audit Event                                                                         | FR-01, 3.1.1, FR-10 — scope and audit          |
 
 `grievance_management/` also holds the FR-09 SLA Compliance report, three FR-11.2
 dashboard charts and the FR-11.1 workspace, since those are cross-module views.
 
-Six roles are created on install: Farmer, Assisted-Submissions, L1 Nodal Officer,
-L2 Senior Nodal Officer, Department Head and OAN Administrator-ATI. The Farmer role has
-desk access disabled, since farmers reach the system through the portal.
+Three roles are created on install: Grievance Submitter, Grievance Officer and
+Grievance Admin. A role carries capability only — what actions exist for you. Which
+cases you may touch comes from Grievance RBAC Assignment scope, and seniority comes
+from position in the reporting chain, which is why there is no role per rung. Submitter
+covers every filing actor, distinguished by `submitter_type` rather than by role.
 
 ### Application layers
 
-| Path | Holds |
-| --- | --- |
-| `api/v1/` | The versioned public contract. Breaking changes ship as `api/v2/` alongside; see `api/__init__.py` for the policy |
-| `services/` | Domain logic: routing, SLA, lifecycle, notifications, audit |
-| `permissions.py` | FR-01 deny-by-default RBAC query conditions |
-| `tasks.py` | FR-07 scheduled jobs, wired in `hooks.py` |
-| `setup/install.py` | Seed data: roles, categories, regions, the Appendix C events |
+| Path               | Holds                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `api/v1/`          | The versioned public contract. Breaking changes ship as `api/v2/` alongside; see `api/__init__.py` for the policy |
+| `services/`        | Domain logic: routing, SLA, lifecycle, notifications, audit                                                       |
+| `permissions.py`   | FR-01 deny-by-default RBAC query conditions                                                                       |
+| `tasks.py`         | FR-07 scheduled jobs, wired in `hooks.py`                                                                         |
+| `setup/install.py` | Seed data: roles, categories, the Appendix C events                                                               |
 
 ### Known incomplete work
 
@@ -374,7 +375,7 @@ here because the FSD contradicts itself and the call was made during the build.
 
 - **SLA clock start.** FSD 4.2 starts the timer at assignment; UC-04 computes the breach
   from creation date. These diverge for any grievance waiting in the manual routing
-  queue. Implemented per 4.2, since 1.3 defines the SLA as the time an *assigned* agency
+  queue. Implemented per 4.2, since 1.3 defines the SLA as the time an _assigned_ agency
   must act. Switch with the `grievance_sla_clock_start` site config key.
 - **Reassignment SLA.** FSD 3.3.1 requires a configured policy and says it "shall not be
   implicit"; Appendix D-2 hardcodes a reset. Implemented as the explicit `sla_treatment`
@@ -382,7 +383,7 @@ here because the FSD contradicts itself and the call was made during the build.
 
 The ticket-number segment codes are a documented assumption. The specification's own
 example code `AGRN` matches none of its five service categories, so the codes seeded on
-the Region, Woreda and Service Category masters need confirming against the OAN registry
+the Administrative Area and Service Category masters need confirming against the OAN registry
 before go-live.
 
 ---
@@ -399,8 +400,7 @@ Git Bash rewrote the path. Prefix the command with `MSYS_NO_PATHCONV=1`.
 `common_site_config.json` still points at `127.0.0.1`. Redo step 3.7.
 
 **`bench init` looks frozen**
-It is not. It clones the framework, installs Python dependencies, then runs `yarn
-install` and builds assets. Ten to fifteen minutes is normal on a first run.
+It is not. It clones the framework, installs Python dependencies, then runs `yarn install` and builds assets. Ten to fifteen minutes is normal on a first run.
 
 **Site loads nothing on port 8100**
 Either the `ports` block is missing from the compose file, or `FRAPPE_BIND_ADDR` is

@@ -156,8 +156,9 @@ def auto_close(grievance):
 	from oan_grievance_service.services import notifications
 
 	grievance.db_set("closure_reason", "Closed - no objection received", update_modified=False)
-	history = change_status(grievance, C.CLOSED, note="Closed - no objection received",
-	                        automated=True, notify=False)
+	history = change_status(
+		grievance, C.CLOSED, note="Closed - no objection received", automated=True, notify=False
+	)
 	notifications.queue(grievance, C.EVENT_AUTO_CLOSED)
 	return history
 

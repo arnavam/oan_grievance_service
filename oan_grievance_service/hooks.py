@@ -8,6 +8,8 @@ app_license = "mit"
 # Apps
 # ------------------
 
+required_apps = ["oan_auth_service"]
+
 add_to_apps_screen = [
 	{
 		"name": "oan_grievance_service",
@@ -60,6 +62,12 @@ doc_events = {
 	"Grievance Anonymity Request": {
 		"on_update": "oan_grievance_service.services.hooks_handlers.anonymity_on_update",
 	},
+	# FSD 3.8: our send path renders per recipient inside print_language(), which only
+	# moves _()-marked strings, so a Grievance notification must not carry bare literal
+	# text. Extends a core doctype through the supported hook rather than editing it.
+	"Notification": {
+		"validate": "oan_grievance_service.services.notifications.validate_notification",
+	},
 }
 
 # Scheduled Tasks
@@ -83,15 +91,27 @@ scheduler_events = {
 # Configuration that must travel with the app rather than be re-keyed per site.
 
 fixtures = [
-	{"dt": "Role", "filters": [["name", "in", [
-		"Farmer",
-		"Assisted-Submissions",
-		"L1 Nodal Officer",
-		"L2 Senior Nodal Officer",
-		"Department Head",
-		"OAN Administrator-ATI",
-	]]]},
+	{
+		"dt": "Role",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Grievance Submitter",
+					"Grievance Officer",
+					"Grievance Admin",
+				],
+			]
+		],
+	},
 ]
+
+# Authentication & Registration
+# -----------------------------
+# Integrates with oan_auth_service to initialize domain profiles upon user registration.
+
+on_user_registered = ["oan_grievance_service.services.hooks_handlers.on_user_registered"]
 
 # Portal
 # ------------------

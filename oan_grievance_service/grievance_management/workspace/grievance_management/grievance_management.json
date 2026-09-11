@@ -162,6 +162,16 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Grievance Role Level",
+   "link_count": 0,
+   "link_to": "Grievance Role Level",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Grievance Response Template",
    "link_count": 0,
    "link_to": "Grievance Response Template",
@@ -172,9 +182,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Grievance Notification Config",
+   "label": "Notification",
    "link_count": 0,
-   "link_to": "Grievance Notification Config",
+   "link_to": "Notification",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -191,19 +201,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Region",
+   "label": "Administrative Area",
    "link_count": 0,
-   "link_to": "Region",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Woreda",
-   "link_count": 0,
-   "link_to": "Woreda",
+   "link_to": "Administrative Area",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"

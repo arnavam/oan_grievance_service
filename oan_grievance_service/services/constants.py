@@ -61,7 +61,8 @@ RESPONSE_OUTCOME_NEXT_STATUS = {
 	"Requires further info": MORE_INFO_NEEDED,
 }
 
-# FSD Appendix C event codes. Seeded as Grievance Notification Config records.
+# FSD Appendix C event codes. Each is the "method" on one core Notification record per
+# channel, seeded by setup/install.py and editable from the desk thereafter.
 EVENT_SUBMISSION_RECEIVED = "submission_received"
 EVENT_DUPLICATE_DETECTED = "duplicate_detected"
 EVENT_ASSIGNED_AUTO = "grievance_assigned_auto"

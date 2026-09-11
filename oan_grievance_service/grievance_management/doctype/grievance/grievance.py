@@ -8,14 +8,6 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import getseries
 
-# FSD 3.2.3 gives the ticket scheme REGION-WOREDA-CATEGORY-SEQUENCE with the example
-# OROM-BISH-AGRN-12345. The segment codes now come from the Region, Woreda and Service
-# Category masters rather than being hardcoded, so an administrator can correct them
-# without a release. `abbreviate` is only the fallback for a master with no code set.
-#
-# Note the specification's own example code "AGRN" matches none of the five service
-# categories in FSD 3.2.2. The seeded codes are INPT, SCHM, PAYM, CRDT and MRKT, and
-# should be confirmed against the OAN registry before go-live.
 CODE_LENGTH = 4
 MIN_DESCRIPTION_LENGTH = 20
 
@@ -32,26 +24,55 @@ def segment(doctype: str, name: str) -> str:
 	"""The configured ticket code for a master record, else an abbreviation of it."""
 	if not name:
 		return "XXXX"
-	code = frappe.db.get_value(doctype, name, "code")
+	try:
+		code = frappe.db.get_value(doctype, name, "code")
+	except Exception:
+		code = None
 	return (code or abbreviate(name)).upper()
 
 
 class Grievance(Document):
 	def autoname(self):
-		"""Build the FSD 3.2.3 ticket number: REGION-WOREDA-CATEGORY-SEQUENCE."""
-		prefix = "-".join(
-			[
-				segment("Region", self.region),
-				segment("Woreda", self.woreda),
-				segment("Service Category", self.service_category),
-			]
-		)
+		"""Build the ticket number: AREA-CATEGORY-SEQUENCE."""
+		area_code = "GEN"
+		if self.administrative_area:
+			area_code = segment("Administrative Area", self.administrative_area)
+
+		cat_code = segment("Service Category", self.service_category)
+		prefix = f"{area_code}-{cat_code}"
 		self.name = f"{prefix}-{getseries(prefix + '-', 5)}"
 		self.ticket_number = self.name
 
 	def validate(self):
 		self.validate_description_length()
 		self.validate_grievance_type_category()
+		self.set_administrative_area_metadata()
+
+	def set_administrative_area_metadata(self):
+		"""Denormalise area_lft and capture immutable area_path_code snapshot."""
+		if not self.administrative_area:
+			return
+
+		area = frappe.get_doc("Administrative Area", self.administrative_area)
+		if area.is_group:
+			frappe.throw(
+				_(
+					"Grievances can only be attached to an operational leaf Administrative Area (not a group)."
+				),
+				title=_("Invalid Administrative Area"),
+			)
+
+		if area.valid_to and str(area.valid_to) <= frappe.utils.today():
+			frappe.throw(
+				_("The selected Administrative Area '{0}' has been dissolved or reorganized.").format(
+					self.administrative_area
+				),
+				title=_("Dissolved Administrative Area"),
+			)
+
+		self.area_lft = area.lft
+		if not self.area_path_code:
+			self.area_path_code = area.path_code or area.name
 
 	def validate_description_length(self):
 		"""FSD 3.2.2: the description is free text with a minimum of 20 characters."""
@@ -77,23 +98,6 @@ class Grievance(Document):
 				title=_("Type Does Not Match Category"),
 			)
 
-	# ------------------------------------------------------------------
-	# Deliberately not implemented yet. Each of these depends on a spec
-	# question that is still open; see SETUP.md before filling them in.
-	# ------------------------------------------------------------------
 
-	def apply_routing(self):
-		"""FSD 3.3: evaluate Grievance Routing Rule and auto-assign, else queue for the
-		nodal officer. Stub: the fallback behaviour interacts with the unresolved SLA
-		clock start below."""
-		raise NotImplementedError("FSD 3.3 routing engine is not implemented yet")
-
-	def start_sla(self):
-		"""FSD 3.7 SLA clock.
-
-		UNRESOLVED: FSD 4.2 starts the timer at assignment, while UC-04 computes the
-		breach from creation_date + sla_days. These differ for any grievance that waits
-		in the manual routing queue. Do not implement until the user decides which
-		applies.
-		"""
-		raise NotImplementedError("SLA clock start is unresolved between FSD 4.2 and UC-04")
+def on_doctype_update():
+	frappe.db.add_index("Grievance", ["area_lft"])

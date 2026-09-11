@@ -1,8 +1,9 @@
 {
  "actions": [],
- "allow_rename": 1,
+ "allow_rename": 0,
  "autoname": "format:GR-NOTIF-{######}",
  "creation": "2026-09-03 18:15:06.437817",
+ "description": "FR-08 cross-channel delivery record. Core has no per-ticket history that spans SMS and email: Communication covers email only, and SMS Log is an unlinked, success-only, batch-level gateway trace whose only DocPerm is System Manager read. This is the one place an officer can answer 'what did we notify on this ticket, on which channel, and did it land'.",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -12,34 +13,48 @@
   "recipient",
   "col_notif",
   "channel",
-  "sent_at",
-  "status",
   "language",
+  "status",
+  "sent_at",
   "sec_msg",
-  "message"
+  "subject",
+  "message",
+  "error",
+  "sec_transport",
+  "notification",
+  "col_transport",
+  "communication",
+  "sms_log"
  ],
  "fields": [
   {
    "fieldname": "grievance",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Grievance",
-   "options": "Grievance"
+   "options": "Grievance",
+   "reqd": 1,
+   "search_index": 1
   },
   {
-   "description": "FSD Appendix C notification matrix event name",
+   "description": "FSD Appendix C notification matrix event key, e.g. submission_received",
    "fieldname": "event",
    "fieldtype": "Data",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Event",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
+   "description": "The User this was addressed to, or the bare address when the recipient is not a User (the Department Officer mailbox is a Data field on Grievance Department).",
    "fieldname": "recipient",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Recipient",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "col_notif",
@@ -49,8 +64,27 @@
    "fieldname": "channel",
    "fieldtype": "Select",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Channel",
-   "options": "SMS\nEmail",
+   "options": "SMS\nEmail\nSystem Notification",
+   "reqd": 1
+  },
+  {
+   "default": "en",
+   "description": "FSD 3.8: citizen messages are localized in Amharic and English. Resolved per recipient from User.language at send time, never stored on the Grievance.",
+   "fieldname": "language",
+   "fieldtype": "Link",
+   "label": "Language",
+   "options": "Language"
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Queued\nSent\nFailed",
    "reqd": 1
   },
   {
@@ -59,36 +93,66 @@
    "label": "Sent At"
   },
   {
-   "default": "Queued",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Status",
-   "options": "Queued\nSent\nFailed"
-  },
-  {
-   "default": "English",
-   "description": "FSD 3.8: SMS messages are localized in Amharic and English",
-   "fieldname": "language",
-   "fieldtype": "Select",
-   "label": "Language",
-   "options": "English\nAmharic"
-  },
-  {
    "fieldname": "sec_msg",
    "fieldtype": "Section Break",
    "label": "Message"
   },
   {
+   "description": "Rendered subject. Used by email and reused as the in-app notification title; SMS carries the body alone, which is why Appendix C wording repeats the ticket number inside the message.",
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject"
+  },
+  {
+   "description": "The rendered body as actually sent. Snapshotted so that editing the Notification template later does not rewrite history.",
    "fieldname": "message",
    "fieldtype": "Text",
    "label": "Message"
+  },
+  {
+   "depends_on": "eval:doc.status==\"Failed\"",
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error"
+  },
+  {
+   "fieldname": "sec_transport",
+   "fieldtype": "Section Break",
+   "label": "Transport Records"
+  },
+  {
+   "description": "The core Notification record that produced this row.",
+   "fieldname": "notification",
+   "fieldtype": "Link",
+   "label": "Notification",
+   "options": "Notification",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_transport",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Email transport record. Empty when the send failed before core created one.",
+   "fieldname": "communication",
+   "fieldtype": "Link",
+   "label": "Communication",
+   "options": "Communication",
+   "read_only": 1
+  },
+  {
+   "description": "SMS transport record. Core writes one only on gateway success, and not at all when a send_sms hook is registered, so this is frequently empty even for a delivered message.",
+   "fieldname": "sms_log",
+   "fieldtype": "Link",
+   "label": "SMS Log",
+   "options": "SMS Log",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-03 18:15:06.437817",
+ "modified": "2026-09-10 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Grievance Notification",
  "name": "Grievance Notification Log",
@@ -96,31 +160,55 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
+   "role": "Grievance Admin",
    "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
    "report": 1,
-   "role": "OAN Administrator-ATI",
-   "share": 1,
-   "write": 1
+   "export": 1,
+   "share": 0,
+   "print": 1,
+   "email": 1
   },
   {
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
    "role": "System Manager",
-   "share": 1,
-   "write": 1
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "print": 1,
+   "email": 1
+  },
+  {
+   "role": "Grievance Officer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "print": 1,
+   "email": 1
   }
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "sort_field": "modified",
+ "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 0
 }
