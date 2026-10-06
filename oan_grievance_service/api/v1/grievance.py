@@ -51,6 +51,8 @@ from oan_grievance_service.services.resolvers import resolve_administrative_area
 
 route = prefixed("/api/v1/grievances")
 
+ALLOWED_GRIEVANCE_ROLES = C.ALLOWED_GRIEVANCE_ROLES
+
 
 class SubmitGrievanceRequest(GrievanceSubmissionPayload):
 	"""Request body for the one-step submission endpoint."""
@@ -171,6 +173,90 @@ class PostMessageRequest(BaseModel):
 	)
 
 
+class DecideDeferralRequest(BaseModel):
+	decision: str = Field(..., description="Approved or Rejected")
+	note: str | None = None
+
+
+@route(
+	"/<ticket_number>/defer-sla/decide",
+	methods=("POST",),
+	summary="Approve or reject a pending SLA deferral request",
+)
+@frappe.whitelist()
+@validate_request(DecideDeferralRequest)
+@handle_api_errors
+@require_role(ALLOWED_GRIEVANCE_ROLES)
+def decide_deferral(ticket_number: str, decision: str, note: str | None = None, **kwargs):
+	"""Approve or reject a pending SLA deferral request for this grievance."""
+	doc = _load(ticket_number, ptype="write")
+	pending_reqs = frappe.get_all(
+		"Grievance Change Request",
+		filters={"grievance": doc.name, "status": "Pending"},
+		pluck="name",
+		order_by="creation desc",
+	)
+	if not pending_reqs:
+		frappe.throw(_("No pending deferral request found for this grievance."), frappe.DoesNotExistError)
+
+	req_items = frappe.get_all(
+		"Grievance Change Request Item",
+		filters={"parent": ["in", pending_reqs], "fieldname": "sla_due_date"},
+		fields=["parent"],
+		limit=1,
+	)
+	if not req_items:
+		frappe.throw(_("No pending deferral request found for this grievance."), frappe.DoesNotExistError)
+
+	request_name = req_items[0]["parent"]
+
+	from oan_grievance_service.api.v1.change_request import decide as cr_decide
+
+	return cr_decide(name=request_name, decision=decision, note=note)
+
+
+class DecideReassignmentRequest(BaseModel):
+	decision: str = Field(..., description="Approved or Rejected")
+	note: str | None = None
+
+
+@route(
+	"/<ticket_number>/reassign/decide",
+	methods=("POST",),
+	summary="Approve or reject a pending reassignment request",
+)
+@frappe.whitelist()
+@validate_request(DecideReassignmentRequest)
+@handle_api_errors
+@require_role(ALLOWED_GRIEVANCE_ROLES)
+def decide_reassignment(ticket_number: str, decision: str, note: str | None = None, **kwargs):
+	"""Approve or reject a pending reassignment request for this grievance."""
+	doc = _load(ticket_number, ptype="write")
+	pending_reqs = frappe.get_all(
+		"Grievance Change Request",
+		filters={"grievance": doc.name, "status": "Pending"},
+		pluck="name",
+		order_by="creation desc",
+	)
+	if not pending_reqs:
+		frappe.throw(_("No pending reassignment request found for this grievance."), frappe.DoesNotExistError)
+
+	req_items = frappe.get_all(
+		"Grievance Change Request Item",
+		filters={"parent": ["in", pending_reqs], "fieldname": ["in", ["assigned_dept", "assigned_to"]]},
+		fields=["parent"],
+		limit=1,
+	)
+	if not req_items:
+		frappe.throw(_("No pending reassignment request found for this grievance."), frappe.DoesNotExistError)
+
+	request_name = req_items[0]["parent"]
+
+	from oan_grievance_service.api.v1.change_request import decide as cr_decide
+
+	return cr_decide(name=request_name, decision=decision, note=note)
+
+
 class ResponseTemplatesRequest(BaseModel):
 	model_config = {"extra": "allow"}
 
@@ -198,7 +284,6 @@ class DeferSLARequest(BaseModel):
 	reason: str = Field(..., min_length=1)
 
 
-ALLOWED_GRIEVANCE_ROLES = C.ALLOWED_GRIEVANCE_ROLES
 STAFF_ROLES = C.STAFF_ROLES
 
 # Columns the server derives on submission. Accepting any of these from the caller
@@ -1206,6 +1291,35 @@ def timeline(
 	for entry in entries:
 		entry["attachments"] = attachments_by_timeline.get(entry["name"], [])
 
+	pending_reqs = frappe.get_all(
+		"Grievance Change Request",
+		filters={"grievance": doc.name, "status": "Pending"},
+		pluck="name",
+		order_by="creation desc",
+	)
+	active_deferral_request = None
+	active_reassignment_request = None
+	if pending_reqs:
+		req_items = frappe.get_all(
+			"Grievance Change Request Item",
+			filters={"parent": ["in", pending_reqs]},
+			fields=["parent", "fieldname"],
+		)
+		deferral_req_names = {item["parent"] for item in req_items if item["fieldname"] == "sla_due_date"}
+		reassign_req_names = {
+			item["parent"] for item in req_items if item["fieldname"] in ("assigned_dept", "assigned_to")
+		}
+
+		from oan_grievance_service.api.v1.change_request import serialize as serialize_cr
+
+		for req_name in pending_reqs:
+			if req_name in deferral_req_names and not active_deferral_request:
+				active_deferral_request = serialize_cr(frappe.get_doc("Grievance Change Request", req_name))
+			if req_name in reassign_req_names and not active_reassignment_request:
+				active_reassignment_request = serialize_cr(
+					frappe.get_doc("Grievance Change Request", req_name)
+				)
+
 	from oan_grievance_service.api.v1.administrative_area import (
 		format_administrative_location,
 		get_administrative_hierarchy,
@@ -1254,11 +1368,13 @@ def timeline(
 				"confirmation_deadline": doc.state_deadline
 				if doc.workflow_state == C.STATE_RESOLVED
 				else None,
+				"active_deferral_request": active_deferral_request,
 			},
 			"assignment": {
 				"department": doc.assigned_dept,
 				"assigned_to": doc.assigned_to,
 				"routed_automatically": bool(doc.routed_automatically),
+				"active_reassignment_request": active_reassignment_request,
 			},
 			"available_actions": _get_available_actions_for_user(doc),
 			"can_request_more_info": contact["can_request_more_info"],

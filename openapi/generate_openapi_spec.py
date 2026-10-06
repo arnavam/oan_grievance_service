@@ -720,6 +720,20 @@ data(
 			"status": S(example="Under Investigation"),
 			"escalated": B(),
 			"summary": OBJ({"description": S(nullable=True), "desired_outcome": S(nullable=True)}),
+			"sla": OBJ(
+				{
+					"sla_due_date": S(format="date-time", nullable=True),
+					"active_deferral_request": {**REF("ChangeRequestData"), "nullable": True},
+				}
+			),
+			"assignment": OBJ(
+				{
+					"department": S(nullable=True),
+					"assigned_to": S(nullable=True),
+					"routed_automatically": B(),
+					"active_reassignment_request": {**REF("ChangeRequestData"), "nullable": True},
+				}
+			),
 			"submitter": REF("TimelineSubmitterDetail"),
 			"timeline": ARR(REF("TimelineEventItem")),
 		},
@@ -1552,6 +1566,8 @@ def _determine_response(func_name: str, path: str, method: str) -> str | None:
 		"message": "GrievanceMessageResponse",
 		"reassign": "GrievanceChangeResponse",
 		"defer_sla": "GrievanceChangeResponse",
+		"decide_deferral": "ChangeRequestResponse",
+		"decide_reassignment": "ChangeRequestResponse",
 		"anonymity_decision": "GrievanceChangeResponse",
 		"summary": "GrievanceStatusSummaryResponse",
 		"options": "SubmitterOptionsResponse" if "submitters" in path else "GrievanceOptionsResponse",

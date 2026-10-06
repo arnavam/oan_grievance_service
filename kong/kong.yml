@@ -142,6 +142,66 @@ services:
         policy: redis
         fault_tolerant: true
         hide_client_headers: false
+  - name: post-api-v1-grievances-ticket_number-defer-sla-decide
+    methods:
+    - POST
+    paths:
+    - ~/api/v1/grievances/(?<ticket_number>[^/]+)/defer-sla/decide$
+    strip_path: false
+    regex_priority: 6
+    tags:
+    - oan
+    - grievance
+    - v1
+    - d07
+    - officer-core
+    - bearer
+    plugins:
+    - name: rate-limiting
+      config:
+        minute: 300
+        hour: 10000
+        limit_by: consumer
+        policy: redis
+        fault_tolerant: true
+        hide_client_headers: false
+    - name: jwt
+      config:
+        claims_to_verify:
+        - exp
+        key_claim_name: iss
+        header_names:
+        - Authorization
+  - name: post-api-v1-grievances-ticket_number-reassign-decide
+    methods:
+    - POST
+    paths:
+    - ~/api/v1/grievances/(?<ticket_number>[^/]+)/reassign/decide$
+    strip_path: false
+    regex_priority: 6
+    tags:
+    - oan
+    - grievance
+    - v1
+    - d07
+    - officer-core
+    - bearer
+    plugins:
+    - name: rate-limiting
+      config:
+        minute: 300
+        hour: 10000
+        limit_by: consumer
+        policy: redis
+        fault_tolerant: true
+        hide_client_headers: false
+    - name: jwt
+      config:
+        claims_to_verify:
+        - exp
+        key_claim_name: iss
+        header_names:
+        - Authorization
   - name: get-api-v1-grievances
     methods:
     - GET
