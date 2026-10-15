@@ -93,13 +93,13 @@ call it once per rung while climbing the chain.
 `routing.ranked_assignments(grievance)` yields desks best first; `apply_routing` takes the
 first desk that yields an officer.
 
-1. Desks matching category, type and provider.
-2. Desks matching category and type (provider ignored).
-3. Desks matching category only.
-4. The **Unrouted** desk.
+1. Desks whose category, type and provider scopes each equal the case's or are empty (an empty
+   scope is a wildcard). A desk set to another category, type or provider never takes the case.
+2. The **Unrouted** desk.
 
-Within each pass, desks with more matching scopes rank first, then the desk whose officers
-cover the case's area most tightly. Region is the last thing given up: a desk qualifies even
+Within step 1, the desk whose officers cover the case's area most tightly ranks first, then
+desks with more matching scopes (the order `find_matching_assignment` always used). Region is
+the last thing given up: a desk qualifies even
 when none of its officers cover the case's area, because the officer pick climbs rungs to one
 with no area (usually the Category Admin). If no rung covers the area, any officer on the desk
 is used. A desk with no officer is skipped. Desks with no department are skipped because a
@@ -173,6 +173,8 @@ do nothing, and the records decide the scope.
     Changing `service_categories` re-seats them among the head's records only.
   - A Desk Head cannot create L3s or Reviewers, create departments, or move officers between
     departments.
+  - A Desk Head never creates, enrols or edits a login that holds an admin role, even one that
+    is also an officer (`_assert_not_admin`), as `reset_temporary_password` already refuses.
 - **Scope for types** (`permissions.head_scopes`): the (department, category) of each top-rung
   record, where an empty field is every department or every category.
 - **Supervisors**: an L1 reports to an L2 or L3, an L2 to an L3 (`SUPERVISOR_LEVELS`).
@@ -184,8 +186,12 @@ do nothing, and the records decide the scope.
   record on the category (`null` is every department), the SLA (`sla_days`, `auto_escalate`) and
   the grievance types. Desk Heads read only categories they head.
 - **DocPerm**: the role has read, write and create on `Grievance Type` and
-  `Grievance RBAC Assignment` so the API's saves pass Frappe's permission check. The API's scope
-  checks are what limit it; the role has no desk access and Kong exposes only `/api/v1`.
+  `Grievance RBAC Assignment` so the API's saves pass Frappe's permission check. The
+  `has_permission` hooks (`permissions.has_rbac_assignment_permission`,
+  `permissions.has_grievance_type_permission`) narrow every write by a Desk Head to the records
+  they head and the categories they head, so Frappe's generic `/api/resource` cannot reach
+  further than the API does. A Desk Head cannot create an RBAC record, and cannot move a type
+  to a category they do not head. Admins and other roles are left to the DocPerm rows.
 
 ### Role level label
 

@@ -198,32 +198,30 @@ def _active_assignments():
 
 
 def ranked_assignments(grievance):
-	"""Every desk that may take the case, best first, ending with the unrouted desk."""
-	case_area, case_lft, case_rgt = _extract_case_area_bounds(grievance)
-	assignments = [a for a in _active_assignments() if a.department_scope != C.UNROUTED_DEPARTMENT]
+	"""Every desk that may take the case, best first, ending with the unrouted desk.
 
-	seen = set()
-	for checked in (MATCH_FIELDS, MATCH_FIELDS[:2], MATCH_FIELDS[:1]):
-		scoped = []
-		for a in assignments:
-			if a.name in seen:
-				continue
-			if all(not a.get(scope) or a.get(scope) == _field_of(grievance, doc) for scope, doc in checked):
-				matched = sum(1 for scope, doc in checked if a.get(scope))
-				scoped.append((a, matched))
-		fits = _desk_area_fits([a.name for a, _ in scoped], case_area, case_lft, case_rgt)
-		ordered = sorted(
-			scoped,
-			key=lambda row: (
-				fits.get(row[0].name, (UNBOUNDED, False))[0],
-				-row[1],
-				str(row[0].creation),
-				row[0].name,
-			),
+	A desk qualifies when each scope it sets equals the case's; an empty scope is a wildcard.
+	A desk set to another category, type or provider never takes the case: a case that no
+	desk can serve goes to the unrouted desk instead.
+	"""
+	case_area, case_lft, case_rgt = _extract_case_area_bounds(grievance)
+	scoped = []
+	for a in _active_assignments():
+		if a.department_scope == C.UNROUTED_DEPARTMENT:
+			continue
+		if all(not a.get(scope) or a.get(scope) == _field_of(grievance, doc) for scope, doc in MATCH_FIELDS):
+			scoped.append((a, sum(1 for scope, _doc in MATCH_FIELDS if a.get(scope))))
+	fits = _desk_area_fits([a.name for a, _ in scoped], case_area, case_lft, case_rgt)
+	scoped.sort(
+		key=lambda row: (
+			fits.get(row[0].name, (UNBOUNDED, False))[0],
+			-row[1],
+			str(row[0].creation),
+			row[0].name,
 		)
-		for a, _matched in ordered:
-			seen.add(a.name)
-			yield a
+	)
+	for a, _matched in scoped:
+		yield a
 
 	for a in assignments_for_unrouted():
 		yield a

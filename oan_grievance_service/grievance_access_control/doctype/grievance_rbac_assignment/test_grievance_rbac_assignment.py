@@ -14,8 +14,18 @@ from oan_grievance_service.permissions import (
 	grievance_query_conditions,
 	has_grievance_permission,
 )
+from oan_grievance_service.services import constants as C
 from oan_grievance_service.services import routing
+from oan_grievance_service.setup.install import seed_unrouted_desk
 from oan_grievance_service.tests.fixtures import a_leaf_area, discard_grievance
+
+
+def _set_unrouted_desk_active(active: int) -> None:
+	"""Switch the seeded catch-all desk on or off; it takes any case no other desk can."""
+	seed_unrouted_desk()
+	frappe.db.set_value(
+		"Grievance RBAC Assignment", {"department_scope": C.UNROUTED_DEPARTMENT}, "active", active
+	)
 
 
 class TestGrievanceRBACAssignment(FrappeTestCase):
@@ -377,8 +387,63 @@ class TestGrievanceRBACAssignment(FrappeTestCase):
 			if frappe.db.exists("Grievance RBAC Assignment", desk.name):
 				frappe.delete_doc("Grievance RBAC Assignment", desk.name, force=True, ignore_permissions=True)
 
+	def test_the_unrouted_desk_is_the_last_resort(self):
+		_set_unrouted_desk_active(1)
+		case = {"service_category": "Credit", "grievance_type": None, "associated_service_provider": None}
+		departments = [desk.department_scope for desk in routing.ranked_assignments(case)]
+		self.assertEqual(departments[-1:], [C.UNROUTED_DEPARTMENT])
+		self.assertEqual(departments.count(C.UNROUTED_DEPARTMENT), 1)
+
+		_set_unrouted_desk_active(0)
+		departments = [desk.department_scope for desk in routing.ranked_assignments(case)]
+		self.assertNotIn(C.UNROUTED_DEPARTMENT, departments)
+
+	def test_a_desk_set_to_another_provider_or_type_never_takes_the_case(self):
+		"""Only desks whose set scopes equal the case's rank; the rest fall through to Unrouted."""
+		_set_unrouted_desk_active(1)
+
+		def desk(**scopes):
+			return frappe.get_doc(
+				{
+					"doctype": "Grievance RBAC Assignment",
+					"department_scope": "Unified Agri Dept",
+					"category_scope": "Inputs",
+					"active": 1,
+					"effective_from": frappe.utils.today(),
+					**scopes,
+				}
+			).insert(ignore_permissions=True)
+
+		provider_desk = desk(service_provider_scope="EthioSeed Corp").name
+		type_desk = desk(grievance_type_scope=self.gtype_name, service_provider_scope="EthioSeed Corp").name
+
+		def ranked(**case):
+			case = {"service_category": "Inputs", "grievance_type": None, **case}
+			return [desk.name for desk in routing.ranked_assignments(case)]
+
+		self.assertIn(provider_desk, ranked(associated_service_provider="EthioSeed Corp"))
+		self.assertNotIn(provider_desk, ranked(associated_service_provider="Another Corp"))
+		self.assertNotIn(provider_desk, ranked(associated_service_provider=None))
+		# A desk set to a type and a provider needs both.
+		self.assertNotIn(
+			type_desk, ranked(associated_service_provider="EthioSeed Corp", grievance_type="Other Type")
+		)
+		self.assertIn(
+			type_desk, ranked(associated_service_provider="EthioSeed Corp", grievance_type=self.gtype_name)
+		)
+		# Whatever else is on the list, the unrouted desk is last.
+		self.assertEqual(
+			frappe.db.get_value("Grievance RBAC Assignment", ranked()[-1], "department_scope"),
+			C.UNROUTED_DEPARTMENT,
+		)
+
 	def test_drain_routing_queue_preserves_unrouted_submitted_cases(self):
-		"""Test drain_routing_queue routes matching cases and leaves non-matching cases in manual queue without deletion."""
+		"""Test drain_routing_queue routes matching cases and leaves non-matching cases in manual queue without deletion.
+
+		A case that no desk serves goes to the Unrouted desk while that desk is active, so it is
+		switched off here: the queue is what keeps the case then.
+		"""
+		_set_unrouted_desk_active(0)
 		desk = frappe.get_doc(
 			{
 				"doctype": "Grievance RBAC Assignment",

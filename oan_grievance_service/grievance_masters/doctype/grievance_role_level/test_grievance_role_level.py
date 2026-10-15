@@ -89,6 +89,8 @@ class TestGrievanceRoleLevel(FrappeTestCase):
 					"last_name": "Nodal Officer",
 				}
 			).insert(ignore_permissions=True)
+		# A desk with no category is validated like any other, and refuses a non-officer.
+		frappe.get_doc("User", test_user).add_roles("Grievance Officer")
 
 		if not frappe.db.exists("Grievance Department", "Test Role Dept"):
 			frappe.get_doc(
