@@ -657,6 +657,18 @@ def _head_records(caller: str) -> list:
 	return [row for row in _rows([caller], DEFAULT_ROLE) if row.role_level == top and row.active]
 
 
+def _assert_not_admin(user_id: str) -> None:
+	"""A desk head never reaches a login that holds an admin role, even one that is also an officer.
+
+	Like `reset_temporary_password`: such an account is more powerful than the head may manage.
+	"""
+	if account.user_roles(user_id) & set(C.ADMIN_ROLES):
+		frappe.throw(
+			_("{0} holds an admin role and cannot be managed by a desk head.").format(user_id),
+			frappe.PermissionError,
+		)
+
+
 def scope_create(caller: str, fields: dict) -> dict:
 	"""Seat a Desk Head's new officer on the head's own RBAC records, reporting to them by default.
 
@@ -669,6 +681,7 @@ def scope_create(caller: str, fields: dict) -> dict:
 		frappe.throw(_("A desk head can only create L1 and L2 officers."), frappe.PermissionError)
 	if fields.get("create_department"):
 		frappe.throw(_("A desk head cannot create departments."), frappe.PermissionError)
+	_assert_not_admin(fields["email"])
 	records = _narrow(_head_records(caller), fields.get("department"), fields.get("service_categories"))
 	return {
 		**fields,
@@ -683,6 +696,7 @@ def scope_update(caller: str, user_id: str, changes: dict) -> dict:
 		return changes
 	if role_of(user_id) != DEFAULT_ROLE:
 		frappe.throw(_("A desk head can only manage officers."), frappe.PermissionError)
+	_assert_not_admin(user_id)
 	current = _current(user_id, DEFAULT_ROLE)
 	if current.level not in SUPERVISOR_LEVELS or changes.get("level", current.level) not in SUPERVISOR_LEVELS:
 		frappe.throw(_("A desk head can only manage L1 and L2 officers."), frappe.PermissionError)

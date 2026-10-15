@@ -28,6 +28,7 @@ test_ignore = ["SMS Log"]
 
 
 def _ensure_user(email, mobile=None, language=None):
+	"""An officer login: a desk refuses a user who does not hold the officer role."""
 	if not frappe.db.exists("User", email):
 		frappe.get_doc(
 			{
@@ -39,6 +40,7 @@ def _ensure_user(email, mobile=None, language=None):
 				"language": language,
 			}
 		).insert(ignore_permissions=True)
+	frappe.get_doc("User", email).add_roles("Grievance Officer")
 	return email
 
 

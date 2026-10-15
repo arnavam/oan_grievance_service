@@ -46,6 +46,9 @@ permission_query_conditions = {
 has_permission = {
 	"Grievance": "oan_grievance_service.permissions.has_grievance_permission",
 	"Grievance Response Template": "oan_grievance_service.permissions.has_response_template_permission",
+	# A Desk Head's DocPerm write on these is narrowed to the records and categories they head.
+	"Grievance RBAC Assignment": "oan_grievance_service.permissions.has_rbac_assignment_permission",
+	"Grievance Type": "oan_grievance_service.permissions.has_grievance_type_permission",
 	# Core's File resolves a private file's permission against whatever it is
 	# attached to, so this is what stops /private/files/<name> serving an unscanned
 	# object behind download()'s back.

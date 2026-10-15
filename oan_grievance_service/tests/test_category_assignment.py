@@ -340,12 +340,13 @@ class TestGrievanceCategoryAssignment(FrappeTestCase):
 		)
 		self.assertEqual(l2_seat(), other)
 
-	def test_update_without_an_l1_officer_on_the_desk_is_rejected(self):
+	def test_update_without_an_l1_officer_on_the_desk_is_accepted(self):
+		"""Officers are optional on a desk, so a desk whose L1 has gone can still be edited."""
 		name = self._assignment()
 		frappe.db.set_value("Grievance RBAC Assignment Officer", {"parent": name}, "active", 0)
-		with _keep_transaction():
-			result = update_assignment(name, department=self.department)
-		self.assertEqual(result["code"], "VALIDATION_ERROR", msg=result)
+		result = update_assignment(name, department=self.department)
+		self.assertEqual(result["status"], "success", msg=result)
+		self.assertIsNone(result["data"]["assignment"]["l1_officer"])
 
 	def test_options_categories_follow_the_selected_department(self):
 		from oan_grievance_service.api.v1.grievance import options
@@ -412,31 +413,42 @@ class TestGrievanceCategoryAssignment(FrappeTestCase):
 		):
 			self.assertEqual(result["code"], "NOT_FOUND")
 
-	def test_null_department_and_l1_are_rejected(self):
+	def test_null_department_makes_the_desk_serve_every_department(self):
 		name = self._assignment()
+		for blank in (None, "", " "):
+			with self.subTest(blank=blank):
+				frappe.db.set_value("Grievance RBAC Assignment", name, "department_scope", self.department)
+				result = update_assignment(name, department=blank)
+				self.assertEqual(result["status"], "success", msg=result)
+				self.assertIsNone(result["data"]["assignment"]["department"])
+				stored = frappe.db.get_value(
+					"Grievance RBAC Assignment", name, ["department_scope", "category_scope"], as_dict=True
+				)
+				self.assertFalse(stored.department_scope)
+				self.assertEqual(stored.category_scope, self.category)
+
+	def test_null_l1_officer_leaves_the_desk_without_one(self):
+		name = self._assignment()
+		for blank in (None, ""):
+			with self.subTest(blank=blank):
+				result = update_assignment(name, l1_officer=blank)
+				self.assertEqual(result["status"], "success", msg=result)
+				self.assertIsNone(result["data"]["assignment"]["l1_officer"])
+				self.assertEqual(_desk_users(name), set())
+				# Seat the L1 again for the next blank.
+				self.assertEqual(update_assignment(name, l1_officer=self.l1)["status"], "success")
+
+	def test_a_desk_can_be_created_without_department_or_officers(self):
+		created = create_assignment(service_category=self.category)
+		self.assertEqual(created["status"], "success", msg=created)
+		assignment = created["data"]["assignment"]
+		self.assertIsNone(assignment["department"])
+		self.assertIsNone(assignment["l1_officer"])
+		self.assertEqual(_desk_users(assignment["name"]), set())
+		# One such desk per category.
 		with _keep_transaction():
-			for field, value in (
-				("department", None),
-				("department", ""),
-				("department", " "),
-				("l1_officer", None),
-				("l1_officer", ""),
-			):
-				result = update_assignment(name, **{field: value})
-				self.assertEqual(result["code"], "VALIDATION_ERROR", msg=result)
-				self.assertIn(field, result["details"])
-		stored = frappe.db.get_value(
-			"Grievance RBAC Assignment",
-			name,
-			["department_scope", "category_scope"],
-			as_dict=True,
-		)
-		l1 = frappe.db.get_value(
-			"Grievance RBAC Assignment Officer", {"parent": name, "is_primary": 1}, "user"
-		)
-		self.assertEqual(stored.department_scope, self.department)
-		self.assertEqual(l1, self.l1)
-		self.assertEqual(stored.category_scope, self.category)
+			again = create_assignment(service_category=self.category)
+		self.assertNotEqual(again["status"], "success", msg=again)
 
 	def test_sla_days_must_be_at_least_one(self):
 		with _keep_transaction():

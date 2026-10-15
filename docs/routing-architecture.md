@@ -81,14 +81,15 @@ the _officers on the one desk that won_ step 2 — this is not a walk across des
 `routing.ranked_assignments` returns desks best first, and `apply_routing` takes the first
 one that yields an officer:
 
-1. Desks whose category, type and provider scopes all match the case.
-2. Then desks matching category and type, ignoring the provider scope.
-3. Then desks matching the category only.
-4. Last, the **Unrouted** desk: the `Unrouted` department, held by the seeded
+1. Desks whose category, type and provider scopes each equal the case's or are empty (an
+   empty scope is a wildcard). A desk set to another category, type or provider never takes
+   the case.
+2. Last, the **Unrouted** desk: the `Unrouted` department, held by the seeded
    `unrouted@grievance.local` officer on the default category (`seed_unrouted_desk`).
 
-Within each step, desks with more matching scopes rank first, then the desk whose officers
-cover the case's area most tightly. Region is the last thing given up: a desk with no
+Within step 1, the desk whose officers cover the case's area most tightly ranks first,
+then desks with more matching scopes (the order `find_matching_assignment` always used).
+Region is the last thing given up: a desk with no
 officer covering the case's area still qualifies, because the officer pick climbs rungs
 until one has no area (usually the department head). If a desk has no officer at all, the
 next desk is tried. A case only stays unassigned when the Unrouted desk is deactivated.
