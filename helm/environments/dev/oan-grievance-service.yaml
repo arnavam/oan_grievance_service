@@ -35,6 +35,17 @@ frappe:
       image:
         repository: 379220350808.dkr.ecr.ap-south-1.amazonaws.com/oan/oan-grievance-service/grievance-seed
 
+  # The central APISIX gateway runs in another cluster and reaches gunicorn and socket.io on
+  # these node ports. Allow them in the node's security group from the gateway cluster's
+  # addresses only.
+  gatewayAccess:
+    enabled: true
+    web:
+      nodePort: 30800
+    socket:
+      enabled: true
+      nodePort: 30900
+
   jobs:
     configure:
       # nfs-csi creates each volume directory with mode 0777 (mountPermissions), so the

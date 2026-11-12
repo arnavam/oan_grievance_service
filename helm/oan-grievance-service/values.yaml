@@ -27,6 +27,21 @@ secrets:
     create: true
     name: oan-grievance-jwt
 
+# ClamAV daemon for attachment scanning (templates/clamav.yaml), reached by the site at
+# grievance_clamav_host. Set enabled=false to run without it: scans then retry until a scanner exists.
+clamav:
+  enabled: true
+  image:
+    repository: clamav/clamav-debian
+    tag: "1.4"
+    pullPolicy: IfNotPresent
+  port: 3310
+  resources:
+    requests:
+      memory: 1536Mi
+    limits:
+      memory: 3Gi
+
 frappe:
   image:
     # Set per environment. package_chart.py needs both keys to exist.
@@ -52,6 +67,9 @@ frappe:
       jwt_self_registerable_roles:
       - Grievance Submitter
       jwt_issuer: oan-grievance
+      # <release>-clamav, the Service of templates/clamav.yaml. Release `grievance` is assumed.
+      grievance_clamav_host: grievance-clamav
+      grievance_clamav_port: 3310
     secretValues:
       secret_key:
         secretName: oan-grievance-secret-key

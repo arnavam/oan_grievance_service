@@ -32,6 +32,12 @@ Created outside Git, in namespace `grievance`:
 - `oan-grievance-seed` (key `password`): password of the demo users. Optional; without it they have no password.
 - `oan-grievance-sentry` (key `dsn`): optional.
 
+## ClamAV
+
+`templates/clamav.yaml` runs a ClamAV daemon as `<release>-clamav` (image `clamav/clamav-debian`), and the site
+sets `grievance_clamav_host` to it. It asks for 1.5 GiB of memory and signatures load in one to two minutes after
+the pod starts. Set `clamav.enabled=false` to run without it: attachment scans then retry until a scanner exists.
+
 ## Site settings
 
 `iamServices` in the chart values lists `OAN IAM Service` rows (the login options). When it is set, a Job
@@ -59,12 +65,11 @@ It cannot touch anything else.
    `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability`), unless it covers `oan/*`.
    The node pulls with its own IAM role, see the a2c service's `docs/operations/oan-dev-deploy.md`.
 4. Optional: `kubectl -n grievance create secret generic oan-grievance-seed --from-literal=password=<password>`.
-5. Ask the person who runs the gateway to route a public host to the node port, if the service has to be reached
-   from outside. `gatewayAccess` is off in the values.
+5. `gatewayAccess` opens node port 30800 (gunicorn) and 30900 (socket.io) for the central APISIX gateway. Allow them
+   in the node's security group from the gateway cluster's addresses only, and route a public host to them.
 
 Never commit the kubeconfig, its token or `ca.crt`.
 
 ## Not set up
 
-- ClamAV: `grievance_clamav_host` is unset, so attachment scans retry until a scanner is configured.
 - `iamServices` and an APISIX route for the new host.

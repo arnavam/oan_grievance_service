@@ -1,0 +1,72 @@
+{{- if .Values.clamav.enabled }}
+{{/*
+ClamAV daemon for attachment scanning (oan_grievance_service services/scanning.py).
+The frappe chart reaches it through grievance_clamav_host and grievance_clamav_port (siteConfig in values.yaml). Cluster-internal
+only. The image runs clamd and freshclam; signatures load in one to two minutes after
+start, so readiness waits on the clamd port.
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "clamav.fullname" . }}
+  labels:
+    {{- include "clamav.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clamav
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: clamav
+  template:
+    metadata:
+      labels:
+        {{- include "clamav.labels" . | nindent 8 }}
+        app.kubernetes.io/component: clamav
+    spec:
+      containers:
+      - name: clamav
+        image: "{{ .Values.clamav.image.repository }}:{{ .Values.clamav.image.tag }}"
+        imagePullPolicy: {{ .Values.clamav.image.pullPolicy }}
+        ports:
+        - name: clamd
+          containerPort: 3310
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: clamd
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 30
+        livenessProbe:
+          tcpSocket:
+            port: clamd
+          initialDelaySeconds: 300
+          periodSeconds: 30
+        resources:
+          {{- toYaml .Values.clamav.resources | nindent 10 }}
+        volumeMounts:
+        - name: signatures
+          mountPath: /var/lib/clamav
+      volumes:
+      - name: signatures
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clamav.fullname" . }}
+  labels:
+    {{- include "clamav.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clamav
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: clamav
+  ports:
+  - name: clamd
+    port: {{ .Values.clamav.port }}
+    targetPort: clamd
+    protocol: TCP
+{{- end }}
