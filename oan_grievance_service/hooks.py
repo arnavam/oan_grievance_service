@@ -137,6 +137,10 @@ on_user_profile = ["oan_grievance_service.api.v1.profile.resolve_user_profile_ho
 on_user_registered = ["oan_grievance_service.api.v1.profile.on_user_registered_hook"]
 oan_auth_on_delegated_login = ["oan_grievance_service.api.v1.profile.on_delegated_login_hook"]
 
+# Scopes oan_auth_service's /v1/admin/* endpoints (users, roles, permissions) to the roles and
+# doctypes named "Grievance" or "Grievance <...>". Without it those endpoints answer 400.
+oan_service_prefix = "Grievance"
+
 # Portal
 # ------------------
 # The web portal is a channel open to all submitter types.
