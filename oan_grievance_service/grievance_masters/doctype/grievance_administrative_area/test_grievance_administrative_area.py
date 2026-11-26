@@ -154,21 +154,21 @@ class TestAdministrativeArea(FrappeTestCase):
 		self.assertIn("data", res_child)
 		self.assertGreaterEqual(res_child["data"]["count"], 1)
 		for area in res_child["data"]["areas"]:
-			self.assertEqual(area["parent_administrative_area"], "region-ET14")
+			self.assertEqual(area["parent_administrative_area"], "ET14")
 
 		# Multi-parent drilldown as list
 		res_multi_list = get_areas(parent=["region-ET14", "region-ET07"])
 		self.assertIn("data", res_multi_list)
 		self.assertGreaterEqual(res_multi_list["data"]["count"], 1)
 		for area in res_multi_list["data"]["areas"]:
-			self.assertIn(area["parent_administrative_area"], ["region-ET14", "region-ET07"])
+			self.assertIn(area["parent_administrative_area"], ["ET14", "ET07"])
 
 		# Multi-parent drilldown as comma-separated string
 		res_multi_csv = get_areas(parent="region-ET14, region-ET07")
 		self.assertIn("data", res_multi_csv)
 		self.assertGreaterEqual(res_multi_csv["data"]["count"], 1)
 		for area in res_multi_csv["data"]["areas"]:
-			self.assertIn(area["parent_administrative_area"], ["region-ET14", "region-ET07"])
+			self.assertIn(area["parent_administrative_area"], ["ET14", "ET07"])
 
 		# Multi-parent drilldown with level_name filter (subtree intervals)
 		res_multi_tier = get_areas(parent=["region-ET14", "region-ET07"], level_name="Woreda")
