@@ -143,35 +143,61 @@ class TestAdministrativeArea(FrappeTestCase):
 	def test_get_areas_endpoint(self):
 		from oan_grievance_service.api.v1.administrative_area import get_areas
 
+		suffix = frappe.generate_hash(length=6)
+		created = []
+
+		def make_area(name, parent, level_name, **overrides):
+			doc_name = an_administrative_area(f"{name} {suffix}", parent, level_name, **overrides)
+			created.append(doc_name)
+			return doc_name, frappe.db.get_value("Grievance Administrative Area", doc_name, "code")
+
+		self.addCleanup(
+			lambda: [
+				frappe.delete_doc("Grievance Administrative Area", n, force=True, ignore_permissions=True)
+				for n in reversed(created)
+			]
+		)
+
+		country, _ = make_area("Areas Country", None, C.AREA_LEVEL_COUNTRY)
+		r1, r1_code = make_area(
+			"Areas Region 1", country, C.AREA_LEVEL_REGION, ticket_code=a_free_ticket_code()
+		)
+		r2, r2_code = make_area(
+			"Areas Region 2", country, C.AREA_LEVEL_REGION, ticket_code=a_free_ticket_code()
+		)
+		z1, _ = make_area("Areas Zone 1", r1, C.AREA_LEVEL_ZONE)
+		make_area("Areas Zone 2", r2, C.AREA_LEVEL_ZONE)
+		make_area("Areas Woreda 1", z1, C.AREA_LEVEL_WOREDA)
+
 		# Default root view returns regions
 		res = get_areas()
 		self.assertIn("data", res)
 		self.assertIn("areas", res["data"])
 		self.assertGreaterEqual(res["data"]["count"], 1)
 
-		# Cascading drilldown with single parent
-		res_child = get_areas(parent="region-ET14")
+		# Cascading drilldown with single parent (by external code)
+		res_child = get_areas(parent=r1_code)
 		self.assertIn("data", res_child)
 		self.assertGreaterEqual(res_child["data"]["count"], 1)
 		for area in res_child["data"]["areas"]:
-			self.assertEqual(area["parent_administrative_area"], "ET14")
+			self.assertEqual(area["parent_administrative_area"], r1_code)
 
 		# Multi-parent drilldown as list
-		res_multi_list = get_areas(parent=["region-ET14", "region-ET07"])
+		res_multi_list = get_areas(parent=[r1_code, r2_code])
 		self.assertIn("data", res_multi_list)
 		self.assertGreaterEqual(res_multi_list["data"]["count"], 1)
 		for area in res_multi_list["data"]["areas"]:
-			self.assertIn(area["parent_administrative_area"], ["ET14", "ET07"])
+			self.assertIn(area["parent_administrative_area"], [r1_code, r2_code])
 
 		# Multi-parent drilldown as comma-separated string
-		res_multi_csv = get_areas(parent="region-ET14, region-ET07")
+		res_multi_csv = get_areas(parent=f"{r1_code}, {r2_code}")
 		self.assertIn("data", res_multi_csv)
 		self.assertGreaterEqual(res_multi_csv["data"]["count"], 1)
 		for area in res_multi_csv["data"]["areas"]:
-			self.assertIn(area["parent_administrative_area"], ["ET14", "ET07"])
+			self.assertIn(area["parent_administrative_area"], [r1_code, r2_code])
 
 		# Multi-parent drilldown with level_name filter (subtree intervals)
-		res_multi_tier = get_areas(parent=["region-ET14", "region-ET07"], level_name="Woreda")
+		res_multi_tier = get_areas(parent=[r1_code, r2_code], level_name="Woreda")
 		self.assertIn("data", res_multi_tier)
 		for area in res_multi_tier["data"]["areas"]:
 			self.assertEqual(area["level_name"], "Woreda")
@@ -182,8 +208,8 @@ class TestAdministrativeArea(FrappeTestCase):
 		for area in res_level["data"]["areas"]:
 			self.assertEqual(area["level_name"], "Zone")
 
-		# Ancestor breadcrumbs lookup
-		res_ancestors = get_areas(ancestors_of="region-ET14")
+		# Ancestor breadcrumbs lookup (by external code)
+		res_ancestors = get_areas(ancestors_of=r1_code)
 		self.assertIn("data", res_ancestors)
 		self.assertIn("breadcrumbs", res_ancestors["data"])
 		self.assertGreaterEqual(len(res_ancestors["data"]["breadcrumbs"]), 1)
